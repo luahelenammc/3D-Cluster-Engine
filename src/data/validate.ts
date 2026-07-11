@@ -42,7 +42,7 @@ export function validateDataset(input: unknown): { valid: boolean; issues: Valid
     return { valid: false, issues };
   }
 
-  const dataset = input as GraphDataset;
+  const dataset = input as unknown as GraphDataset;
   const clusterIds = new Set(dataset.clusters.map((cluster) => cluster.id));
   const nodeIds = new Set(dataset.nodes.map((node) => node.id));
 
