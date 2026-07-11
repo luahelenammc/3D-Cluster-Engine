@@ -1,4 +1,5 @@
 import { seededPoint } from "../core/colors";
+import { computeSemanticTargets, resolveSemanticAxes } from "../core/spatial";
 import { DEFAULT_LAYOUT, type ClusterDefinition, type GraphDataset, type GraphLink, type GraphNode, type RuntimeGraph } from "../core/types";
 import { validateDataset } from "./validate";
 
@@ -35,10 +36,13 @@ export class GraphStore {
   replace(dataset: GraphDataset, dirty = false) { this.dataset = clone(dataset); this.past = []; this.future = []; this.dirty = dirty; this.emit(); }
   getRuntimeSnapshot(): RuntimeGraph {
     const seed = this.dataset.layout?.seed || DEFAULT_LAYOUT.seed;
+    const axes = resolveSemanticAxes(this.dataset.layout);
+    const semanticTargets = computeSemanticTargets(this.dataset.nodes, this.dataset.links, this.dataset.clusters || [], axes);
     return {
       nodes: this.dataset.nodes.map((node) => {
-        const initial = node.position || seededPoint(seed, node.id, node.cluster);
-        return { ...clone(node), x: initial.x, y: initial.y, z: initial.z, fx: node.pinned ? initial.x : undefined, fy: node.pinned ? initial.y : undefined, fz: node.pinned ? initial.z : undefined };
+        const semantic = semanticTargets.get(node.id);
+        const initial = node.position || semantic || seededPoint(seed, node.id, node.cluster);
+        return { ...clone(node), semanticTarget: semantic, x: initial.x, y: initial.y, z: initial.z, fx: node.pinned ? initial.x : undefined, fy: node.pinned ? initial.y : undefined, fz: node.pinned ? initial.z : undefined };
       }),
       links: this.dataset.links.map((link, index) => ({ ...clone(link), id: link.id || `link-${index + 1}`, weight: link.weight ?? 1, directed: link.directed ?? false, visible: link.visible ?? true })),
     };
