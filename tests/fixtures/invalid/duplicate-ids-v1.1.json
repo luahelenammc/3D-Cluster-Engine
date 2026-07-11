@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.1",
+  "meta": { "id": "duplicates", "title": "Duplicates", "version": "1.0.0" },
+  "clusters": [{ "id": "a", "label": "A" }, { "id": "a", "label": "Again" }],
+  "nodes": [{ "id": "n1", "label": "One", "cluster": "a" }, { "id": "n1", "label": "Again", "cluster": "a" }],
+  "links": [{ "id": "l1", "source": "n1", "target": "n1" }, { "id": "l1", "source": "n1", "target": "n1" }]
+}
