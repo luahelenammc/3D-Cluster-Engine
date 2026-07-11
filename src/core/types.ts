@@ -5,9 +5,6 @@ export interface GraphPosition {
   x: number;
   y: number;
   z: number;
-  fx?: number | null;
-  fy?: number | null;
-  fz?: number | null;
 }
 
 export interface GraphNode {
@@ -36,6 +33,10 @@ export interface GraphLink {
   metadata?: Record<string, unknown>;
 }
 
+export interface CanonicalGraphLink extends GraphLink {
+  id: string;
+}
+
 export interface ClusterDefinition {
   id: ClusterId;
   label: string;
@@ -49,6 +50,7 @@ export type AxisDimension = "x" | "y" | "z";
 export type SemanticAxisSource = "field" | "cluster" | "degree" | "inDegree" | "outDegree" | "graphDepth" | "stableIndex";
 export type SemanticAxisMissing = "center" | "min" | "max" | "graphDepth" | "stableIndex";
 
+/** Legacy v1.0 single-axis configuration. Accepted only by the migration layer. */
 export interface AxisConfig {
   enabled: boolean;
   field: string;
@@ -91,7 +93,7 @@ export interface LayoutConfig {
   warmupTicks: number;
   cooldownTicks: number;
   axes?: SemanticAxesConfig;
-  /** @deprecated Compatibility bridge for datasets created before semantic 3-axis positioning. */
+  /** @deprecated Runtime compatibility only. Canonical v1.1 datasets must use `axes`. */
   axis?: AxisConfig;
 }
 
@@ -107,7 +109,7 @@ export interface VisualConfig {
 }
 
 export interface GraphDataset {
-  schemaVersion: "1.0";
+  schemaVersion: "1.1";
   meta: {
     id: string;
     title: string;
@@ -118,11 +120,12 @@ export interface GraphDataset {
     attribution?: string[];
     tags?: string[];
   };
-  clusters?: ClusterDefinition[];
+  clusters: ClusterDefinition[];
   nodes: GraphNode[];
-  links: GraphLink[];
+  links: CanonicalGraphLink[];
   layout?: Partial<LayoutConfig>;
   visual?: Partial<VisualConfig>;
+  extensions?: Record<string, unknown>;
 }
 
 export interface RuntimeNode extends GraphNode {
@@ -138,8 +141,7 @@ export interface RuntimeNode extends GraphNode {
   fz?: number | null;
 }
 
-export interface RuntimeLink extends Omit<GraphLink, "source" | "target"> {
-  id: string;
+export interface RuntimeLink extends Omit<CanonicalGraphLink, "source" | "target"> {
   source: NodeId | RuntimeNode;
   target: NodeId | RuntimeNode;
 }
