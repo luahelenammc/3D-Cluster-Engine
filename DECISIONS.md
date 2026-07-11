@@ -54,3 +54,35 @@ context: recalcular centralidade e profundidade apenas sobre nós filtrados fari
 decision: `GraphStore` calcula `semanticTarget` sobre o dataset integral e entrega esse alvo no snapshot de runtime.  
 consequences: filtros removem elementos da vista sem reescrever silenciosamente o significado espacial dos elementos restantes.  
 alternatives_rejected: derivar alvos exclusivamente dentro do renderer filtrado.
+
+## ADR-008 — Separar dialeto externo de corpo canônico
+
+status: accepted  
+context: aceitar CSV, split JSON, Marble e versões antigas diretamente na store misturaria leitura permissiva com autoridade interna.  
+decision: todo formato externo passa por adapter e normalizador antes de produzir `GraphDataset 1.1`; `GraphStore` recebe apenas o corpo validado.  
+consequences: migrações ficam explícitas, testáveis e reportáveis; formatos estrangeiros podem evoluir sem contaminar o renderer.  
+alternatives_rejected: shape guessing dentro da store; um tipo canônico permissivo com campos opcionais para todos os dialetos.
+
+## ADR-009 — IDs obrigatórios para todas as relações canônicas
+
+status: accepted  
+context: IDs derivados do índice do array quebram edição persistente, diff, merge e rastreabilidade quando links mudam de ordem.  
+decision: `GraphDataset 1.1` exige ID único em todo link. Adapters podem gerar IDs determinísticos antes da entrada canônica.  
+consequences: relações tornam-se entidades rastreáveis; exact duplicates ainda dependem de sufixo estável no contexto da entrada.  
+alternatives_rejected: `link-1`, `link-2` produzidos apenas no runtime; identidade baseada na posição do array.
+
+## ADR-010 — Um schema público, não duas gramáticas divergentes
+
+status: accepted  
+context: o schema JSON público e uma cópia TypeScript separada podiam divergir silenciosamente.  
+decision: o runtime importa diretamente `schema/graph-dataset.schema.json`; tipos TypeScript e testes precisam refletir esse mesmo contrato.  
+consequences: mudanças estruturais exigem um único patch de schema e falham em CI quando tipos/fixtures não acompanham.  
+alternatives_rejected: manter schema público raso e validação interna mais rica; duplicar o objeto AJV manualmente.
+
+## ADR-011 — Envelope de performance é parte do contrato operacional
+
+status: accepted  
+context: validade estrutural não garante responsividade nem legibilidade.  
+decision: declarar envelopes mobile, desktop e stress; emitir warnings por escala, densidade e tamanho serializado.  
+consequences: a engine não promete “compatibilidade total” fora das faixas testáveis; adapters e datasets recebem sinais antes de falhar visualmente.  
+alternatives_rejected: tratar performance como detalhe invisível do renderer; impor limites duros que rejeitam corpora grandes.
