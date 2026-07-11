@@ -20,7 +20,8 @@
     "d3-force-3d": "^3.0.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "three-spritetext": "^1.10.0"
   },
   "devDependencies": {
     "@types/node": "22.19.19",
