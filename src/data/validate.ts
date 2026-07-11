@@ -1,9 +1,9 @@
-import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import type { AxisDimension, GraphDataset, ValidationIssue } from "../core/types";
 import { PERFORMANCE_ENVELOPE } from "./contract";
 import { graphDatasetSchema } from "./schema";
 
-const ajv = new Ajv({ allErrors: true, strict: false });
+const ajv = new Ajv2020({ allErrors: true, strict: false });
 const structural = ajv.compile(graphDatasetSchema);
 const axisDimensions: AxisDimension[] = ["x", "y", "z"];
 
