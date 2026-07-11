@@ -9,7 +9,9 @@
 - interface de exploração e edição;
 - adapters canonical, split JSON, CSV e Marble;
 - exportação e autosave local;
-- testes, documentação, responsividade e temas.
-- distribuição estática Vite e workflow de GitHub Pages após falha do runtime Worker original.
-- correção do layout mobile para iniciar com o canvas livre e manter os drawers mutuamente exclusivos.
-- Neighborhood Illumination v0.2: hover/touch contextual, halo, links incidentes iluminados e labels hierárquicos para o nó central e sua vizinhança.
+- testes, documentação, responsividade e temas;
+- distribuição estática Vite e workflow de GitHub Pages após falha do runtime Worker original;
+- correção do layout mobile para iniciar com o canvas livre e manter os drawers mutuamente exclusivos;
+- Neighborhood Illumination v0.2: hover/touch contextual, halo, links incidentes iluminados e labels hierárquicos para o nó central e sua vizinhança;
+- continuidade da Neighborhood Illumination durante arrasto por prioridade `dragged > selected > hovered`;
+- Semantic Axes v0.3: macroposição determinada por três eixos configuráveis, com defaults Território × Progressão × Centralidade relacional, métricas derivadas, fallback compatível e controles na interface.
