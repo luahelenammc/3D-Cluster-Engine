@@ -83,6 +83,8 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
   const graphRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const draggedIdRef = useRef<string | null>(null);
   const dataRef = useRef(graph);
   const clusterMap = new Map(clusters.map((cluster) => [cluster.id, cluster]));
   const layout = { ...DEFAULT_LAYOUT, ...layoutInput, axis: { ...DEFAULT_LAYOUT.axis!, ...(layoutInput?.axis || {}) } };
@@ -112,7 +114,21 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
       const instance = new (ForceGraph3D as any)()(hostRef.current, { controlType: "orbit" });
       graphRef.current = instance;
       setReady(true);
-      instance.backgroundColor(visual.background).showNavInfo(false).nodeResolution(12).nodeRelSize(4).linkOpacity(visual.linkOpacity).nodeThreeObjectExtend(true).linkDirectionalParticleWidth(1.4).linkDirectionalParticleSpeed(0.006).onNodeHover((node: RuntimeNode | null) => setHoveredId(node?.id || null)).onNodeClick((node: RuntimeNode) => onSelect(node.id)).onBackgroundClick(() => onSelect(null)).onEngineTick(() => onSimulation("running")).onEngineStop(() => onSimulation("settled"));
+      instance.backgroundColor(visual.background).showNavInfo(false).nodeResolution(12).nodeRelSize(4).linkOpacity(visual.linkOpacity).nodeThreeObjectExtend(true).linkDirectionalParticleWidth(1.4).linkDirectionalParticleSpeed(0.006).onNodeHover((node: RuntimeNode | null) => {
+        if (draggedIdRef.current) return;
+        setHoveredId(node?.id || null);
+      }).onNodeDrag((node: RuntimeNode) => {
+        const nodeId = node.id;
+        if (draggedIdRef.current !== nodeId) {
+          draggedIdRef.current = nodeId;
+          setDraggedId(nodeId);
+        }
+        setHoveredId(nodeId);
+      }).onNodeDragEnd(() => {
+        draggedIdRef.current = null;
+        setDraggedId(null);
+        setHoveredId(null);
+      }).onNodeClick((node: RuntimeNode) => onSelect(node.id)).onBackgroundClick(() => onSelect(null)).onEngineTick(() => onSimulation("running")).onEngineStop(() => onSimulation("settled"));
       const resize = () => { if (hostRef.current) instance.width(hostRef.current.clientWidth).height(hostRef.current.clientHeight); };
       const observer = new ResizeObserver(resize);
       observer.observe(hostRef.current);
@@ -121,6 +137,7 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     });
     return () => {
       disposed = true;
+      draggedIdRef.current = null;
       const host = hostElement as HTMLDivElement & { _observer?: ResizeObserver };
       host?._observer?.disconnect();
       graphRef.current?._destructor?.();
@@ -133,7 +150,7 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     const instance = graphRef.current;
     if (!instance) return;
     dataRef.current = graph;
-    const activeId = selectedId || hoveredId;
+    const activeId = draggedId || selectedId || hoveredId;
     const activeNeighbors = new Set<string>();
     if (activeId) graph.links.forEach((link) => { if (endpointId(link.source) === activeId) activeNeighbors.add(endpointId(link.target)); if (endpointId(link.target) === activeId) activeNeighbors.add(endpointId(link.source)); });
     const activeNode = graph.nodes.find((node) => node.id === activeId);
@@ -173,7 +190,7 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     linkForce?.distance?.(layout.linkDistance);
     if (layout.mode === "baked") instance.cooldownTicks(0); else instance.cooldownTicks(layout.cooldownTicks).warmupTicks(layout.warmupTicks).d3ReheatSimulation();
     // Configuration objects are intentionally collapsed to their public inputs.
-  }, [graph, clusters, selectedId, hoveredId, layoutInput, visualInput, ready]);
+  }, [graph, clusters, selectedId, hoveredId, draggedId, layoutInput, visualInput, ready]);
 
   return <div ref={hostRef} className="graph-canvas" role="img" aria-label="Visualização tridimensional interativa do grafo. Use a busca e o painel textual para navegação acessível." />;
 });
