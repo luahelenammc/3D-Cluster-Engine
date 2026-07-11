@@ -11,6 +11,7 @@ import { GraphCanvas, type GraphCanvasApi } from "../renderer/GraphCanvas";
 type Toast = { type: "ok" | "error" | "info"; message: string } | null;
 
 function idOf(endpoint: string | GraphNode) { return typeof endpoint === "string" ? endpoint : endpoint.id; }
+function isMobileViewport() { return typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches; }
 
 export default function ClusterEngine() {
   const [store, setStore] = useState<GraphStore | null>(null);
@@ -22,8 +23,8 @@ export default function ClusterEngine() {
   const [simulation, setSimulation] = useState<"running" | "paused" | "settled">("running");
   const [toast, setToast] = useState<Toast>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [leftOpen, setLeftOpen] = useState(() => !isMobileViewport());
+  const [rightOpen, setRightOpen] = useState(() => !isMobileViewport());
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [showAddNode, setShowAddNode] = useState(false);
   const [showAddLink, setShowAddLink] = useState(false);
@@ -58,6 +59,15 @@ export default function ClusterEngine() {
 
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("lms3d.theme", theme); }, [theme]);
   useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(null), 4000); return () => clearTimeout(timer); }, [toast]);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 760px)");
+    const adaptPanels = (event: MediaQueryListEvent) => {
+      setLeftOpen(!event.matches);
+      setRightOpen(!event.matches);
+    };
+    media.addEventListener("change", adaptPanels);
+    return () => media.removeEventListener("change", adaptPanels);
+  }, []);
 
   const clusters = dataset?.clusters || [];
   const linkTypes = useMemo(() => [...new Set((dataset?.links || []).map((link) => link.type || "related"))], [dataset]);
@@ -82,6 +92,29 @@ export default function ClusterEngine() {
       if (isolate) return new Set([id]);
       const next = new Set(current);
       if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectNode(id: string | null) {
+    setSelectedId(id);
+    if (!isMobileViewport()) return;
+    setLeftOpen(false);
+    setRightOpen(Boolean(id));
+  }
+
+  function toggleLeftPanel() {
+    setLeftOpen((current) => {
+      const next = !current;
+      if (next && isMobileViewport()) setRightOpen(false);
+      return next;
+    });
+  }
+
+  function toggleRightPanel() {
+    setRightOpen((current) => {
+      const next = !current;
+      if (next && isMobileViewport()) setLeftOpen(false);
       return next;
     });
   }
@@ -117,10 +150,10 @@ export default function ClusterEngine() {
         <div className="brand"><span className="brand-mark">LMS</span><div><strong>3D Cluster Engine</strong><span>{dataset.meta.title}</span></div></div>
         <div className="search-wrap">
           <span aria-hidden="true">⌕</span><input aria-label="Buscar nós" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar nós, tags, metadata…" />
-          {searchResults.length > 0 && <div className="search-results">{searchResults.map((node) => <button key={node.id} onClick={() => { setSelectedId(node.id); graphApi.current?.focus(node.id); setQuery(""); }}><i style={{ background: clusterColor(node.cluster, clusters.find((c) => c.id === node.cluster)?.color) }} /><span><strong>{node.label}</strong><small>{node.cluster} · {node.id}</small></span></button>)}</div>}
+          {searchResults.length > 0 && <div className="search-results">{searchResults.map((node) => <button key={node.id} onClick={() => { selectNode(node.id); graphApi.current?.focus(node.id); setQuery(""); }}><i style={{ background: clusterColor(node.cluster, clusters.find((c) => c.id === node.cluster)?.color) }} /><span><strong>{node.label}</strong><small>{node.cluster} · {node.id}</small></span></button>)}</div>}
         </div>
         <div className="toolbar">
-          <button className="icon-button" onClick={() => setLeftOpen((value) => !value)} aria-label="Alternar painel esquerdo">☰</button>
+          <button className="icon-button" onClick={toggleLeftPanel} aria-label="Alternar painel esquerdo">☰</button>
           <button onClick={() => fileRef.current?.click()}>Importar</button>
           <input ref={fileRef} className="sr-only" type="file" multiple accept=".json,.csv" onChange={(event) => handleFiles(Array.from(event.target.files || []))} />
           <button onClick={() => downloadDataset(dataset)}>Exportar</button>
@@ -157,12 +190,12 @@ export default function ClusterEngine() {
         </aside>}
 
         <section className="canvas-stage">
-          <GraphCanvas ref={graphApi} graph={visibleGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} onSelect={setSelectedId} onSimulation={setSimulation} />
+          <GraphCanvas ref={graphApi} graph={visibleGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} onSelect={selectNode} onSimulation={setSimulation} />
           <div className="axis-caption"><span>nível semântico</span><i /></div>
-          <button className="inspector-toggle" onClick={() => setRightOpen((value) => !value)}>{rightOpen ? "›" : "‹"}</button>
+          <button className="inspector-toggle" onClick={toggleRightPanel} aria-label="Alternar inspector">{rightOpen ? "›" : "‹"}</button>
         </section>
 
-        {rightOpen && <Inspector dataset={dataset} node={selectedNode} store={store} onSelect={setSelectedId} onFocus={(id) => graphApi.current?.focus(id)} onToast={setToast} />}
+        {rightOpen && <Inspector dataset={dataset} node={selectedNode} store={store} onSelect={selectNode} onFocus={(id) => graphApi.current?.focus(id)} onToast={setToast} />}
       </section>
 
       <footer className="statusbar"><span><i className={`status-light ${simulation}`} /> física: {simulation}</span><span>{visibleGraph.nodes.length}/{dataset.nodes.length} nós visíveis</span><span>{visibleGraph.links.length}/{dataset.links.length} links visíveis</span><span>layout: {dataset.layout?.mode || "live"}</span><span>{issues.length ? `${issues.length} aviso(s)` : "dados válidos"}</span><span className="status-spacer" /><span>arraste · órbita · scroll zoom</span></footer>
