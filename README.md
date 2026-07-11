@@ -9,7 +9,8 @@ O projeto é uma SPA Vite inteiramente estática. Todo push para `main` executa 
 ## O que já funciona
 
 - renderer WebGL com órbita, zoom, foco e fit;
-- física 3D com atração por cluster e axis force por campo numérico;
+- posicionamento semântico tridimensional por três eixos configuráveis;
+- física 3D com alvos semânticos, coesão por cluster e forças de links;
 - cores estáveis por ID de cluster;
 - busca por ID, label, cluster, tags e metadata;
 - filtros por cluster e tipo de relação;
@@ -21,8 +22,9 @@ O projeto é uma SPA Vite inteiramente estática. Todo push para `main` executa 
 - exportação para JSON canônico;
 - layout live, hybrid e baked;
 - autosave local e restauração explícita;
-- undo/redo na store (API pronta; atalhos de interface entram no próximo ciclo);
-- temas dark e light e painéis responsivos.
+- undo/redo na store e na interface;
+- temas dark e light e painéis responsivos;
+- Neighborhood Illumination com continuidade durante drag em mouse e toque.
 
 ## Quick start
 
@@ -55,6 +57,41 @@ O schema público está em `schema/graph-dataset.schema.json`. Um dataset precis
 
 O dataset demo em `public/datasets/demo/dataset.json` é externo ao renderer e pode ser editado sem alterar TypeScript.
 
+## Posicionamento semântico por três eixos
+
+A engine não precisa espalhar nós por uma esfera pseudoaleatória. Cada dataset pode declarar três eixos independentes em `layout.axes`. O preset genérico atual usa:
+
+- **X — Território:** ordem declarada dos clusters;
+- **Y — Progressão:** campo numérico `level`, com profundidade do grafo como fallback;
+- **Z — Centralidade relacional:** soma ponderada das conexões do nó.
+
+Esses nomes são defaults, não ontologia fixa. Cada eixo pode usar uma destas fontes:
+
+- `field`: campo numérico do nó, incluindo caminhos como `metadata.maturity`;
+- `cluster`: posição estável do cluster declarado;
+- `degree`, `inDegree` ou `outDegree`: conectividade derivada;
+- `graphDepth`: distância estrutural calculada no grafo;
+- `stableIndex`: ordem determinística por ID.
+
+Exemplo:
+
+```json
+{
+  "layout": {
+    "axes": {
+      "enabled": true,
+      "x": { "enabled": true, "source": "cluster", "label": "Território" },
+      "y": { "enabled": true, "source": "field", "field": "level", "label": "Progressão", "missing": "graphDepth" },
+      "z": { "enabled": true, "source": "degree", "label": "Centralidade relacional" }
+    }
+  }
+}
+```
+
+Os alvos semânticos são calculados sobre o dataset inteiro e carregados no snapshot de runtime. Filtrar a visualização não redefine silenciosamente o significado espacial. A física continua resolvendo colisões e tensão entre links, mas a macroposição vem dos eixos.
+
+Datasets antigos com a propriedade singular `layout.axis` continuam aceitos por uma ponte de compatibilidade.
+
 ## Importadores
 
 - **Canonical JSON:** um arquivo no schema 1.0.
@@ -67,6 +104,7 @@ Todos os arquivos são processados no navegador. Não há telemetria, upload de 
 ## Arquitetura
 
 - `src/data`: validação, adapters e autoridade canônica (`GraphStore`);
+- `src/core/spatial.ts`: contrato dos eixos, métricas derivadas e alvos semânticos;
 - `src/renderer`: renderer e forças 3D;
 - `src/ui`: interface e controller de interação;
 - `src/core`: contratos e utilidades determinísticas.
@@ -79,10 +117,11 @@ A biblioteca gráfica nunca recebe o objeto canônico original. `GraphStore.getR
 - importação ZIP e screenshot export não entram nesta fase;
 - a fixture Marble real não é distribuída aqui; o adapter aceita os arquivos quando fornecidos pelo usuário;
 - acessibilidade do espaço 3D é necessariamente parcial e é compensada por busca, filtros e inspector textual;
-- datasets muito grandes podem exigir desativar partículas e reduzir pixel ratio em hardware modesto.
+- datasets muito grandes podem exigir desativar partículas e reduzir pixel ratio em hardware modesto;
+- guias geométricos 3D completos para os eixos ainda podem ser adicionados; a versão atual expõe legenda e configuração sem transformar o canvas numa caixa cartesiana opaca.
 
 ## Créditos
 
-Usa `3d-force-graph`, Three.js, `d3-force-3d`, AJV, React, Vinext/Vite e Vitest. O adapter Marble se baseia na taxonomia pública de [withmarbleapp/os-taxonomy](https://github.com/withmarbleapp/os-taxonomy); nenhum dado Marble é redistribuído nesta entrega.
+Usa `3d-force-graph`, Three.js, `d3-force-3d`, AJV, React, Vite e Vitest. O adapter Marble se baseia na taxonomia pública de [withmarbleapp/os-taxonomy](https://github.com/withmarbleapp/os-taxonomy); nenhum dado Marble é redistribuído nesta entrega.
 
 Licença do código ainda depende de decisão da owner. Veja `LICENSE_PENDING.md`.
