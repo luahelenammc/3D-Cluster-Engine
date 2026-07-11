@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.1",
+  "meta": { "id": "minimal", "title": "Minimal", "version": "1.0.0" },
+  "clusters": [{ "id": "root", "label": "Root" }],
+  "nodes": [{ "id": "n1", "label": "Node 1", "cluster": "root" }],
+  "links": []
+}
