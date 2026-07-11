@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { AdditiveBlending, Group, Mesh, MeshBasicMaterial, SphereGeometry } from "three";
 import SpriteText from "three-spritetext";
 import { clusterColor, escapeHtml } from "../core/colors";
+import { createSemanticAxesForce, resolveSemanticAxes } from "../core/spatial";
 import { DEFAULT_LAYOUT, DEFAULT_VISUAL, type ClusterDefinition, type LayoutConfig, type RuntimeGraph, type RuntimeNode, type VisualConfig } from "../core/types";
 
 export interface GraphCanvasApi {
@@ -44,6 +45,7 @@ function fibonacciCenters(ids: string[]) {
 function clusterForce(nodes: RuntimeNode[], clusters: ClusterDefinition[], strength: number) {
   const centers = fibonacciCenters(clusters.map((cluster) => cluster.id));
   const force = (alpha: number) => {
+    if (strength <= 0) return;
     for (const node of nodes) {
       if (node.pinned) continue;
       const center = centers.get(node.cluster) || { x: 0, y: 0, z: 0 };
@@ -51,28 +53,6 @@ function clusterForce(nodes: RuntimeNode[], clusters: ClusterDefinition[], stren
       node.vy = (node.vy || 0) + (center.y - (node.y || 0)) * strength * alpha;
       node.vz = (node.vz || 0) + (center.z - (node.z || 0)) * strength * alpha;
     }
-  };
-  force.initialize = () => undefined;
-  return force;
-}
-
-function axisForce(nodes: RuntimeNode[], config: LayoutConfig["axis"]) {
-  const values = nodes.map((node) => Number(config?.field.startsWith("metadata.") ? config.field.slice(9).split(".").reduce<unknown>((value, key) => typeof value === "object" && value ? (value as Record<string, unknown>)[key] : undefined, node.metadata) : (node as unknown as Record<string, unknown>)[config?.field || "level"])).filter(Number.isFinite);
-  const min = config?.min ?? Math.min(...values, 0);
-  const max = config?.max ?? Math.max(...values, 1);
-  const dimension = config?.dimension || "y";
-  const force = (alpha: number) => {
-    if (!config?.enabled) return;
-    nodes.forEach((node) => {
-      if (node.pinned) return;
-      const raw = Number(config.field.startsWith("metadata.") ? config.field.slice(9).split(".").reduce<unknown>((value, key) => typeof value === "object" && value ? (value as Record<string, unknown>)[key] : undefined, node.metadata) : (node as unknown as Record<string, unknown>)[config.field]);
-      if (!Number.isFinite(raw)) return;
-      let ratio = max === min ? 0.5 : (raw - min) / (max - min);
-      if (config.invert) ratio = 1 - ratio;
-      const target = (ratio - 0.5) * 260;
-      const velocity = `v${dimension}` as "vx" | "vy" | "vz";
-      node[velocity] = (node[velocity] || 0) + (target - (node[dimension] || 0)) * (config.strength ?? 0.18) * alpha;
-    });
   };
   force.initialize = () => undefined;
   return force;
@@ -87,7 +67,8 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
   const draggedIdRef = useRef<string | null>(null);
   const dataRef = useRef(graph);
   const clusterMap = new Map(clusters.map((cluster) => [cluster.id, cluster]));
-  const layout = { ...DEFAULT_LAYOUT, ...layoutInput, axis: { ...DEFAULT_LAYOUT.axis!, ...(layoutInput?.axis || {}) } };
+  const axes = resolveSemanticAxes(layoutInput);
+  const layout = { ...DEFAULT_LAYOUT, ...layoutInput, axes };
   const visual = { ...DEFAULT_VISUAL, ...visualInput };
 
   useImperativeHandle(ref, () => ({
@@ -183,7 +164,7 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
         group.add(label);
       }
       return group;
-    }).linkColor((link: any) => isIncident(link) ? activeColor : activeId ? "#303746" : (link.color || "#78839a")).linkWidth((link: any) => isIncident(link) ? Math.max(2.2, Number(link.weight || 1) * 1.4) : Math.max(0.35, Math.min(2, Number(link.weight || 1) * visual.linkWidth))).linkDirectionalParticles((link: any) => visual.showDirectionalParticles && link.directed ? isIncident(link) ? 5 : activeId ? 0 : 1 : 0).linkDirectionalParticleColor(() => activeColor).linkLabel((link: any) => `<div class="graph-tooltip"><b>${escapeHtml(String(link.type || "related"))}</b><span>${escapeHtml(endpointId(link.source))} → ${escapeHtml(endpointId(link.target))}</span></div>`).graphData(graph).d3Force("cluster", clusterForce(graph.nodes, clusters, layout.clusterStrength)).d3Force("axis", axisForce(graph.nodes, layout.axis));
+    }).linkColor((link: any) => isIncident(link) ? activeColor : activeId ? "#303746" : (link.color || "#78839a")).linkWidth((link: any) => isIncident(link) ? Math.max(2.2, Number(link.weight || 1) * 1.4) : Math.max(0.35, Math.min(2, Number(link.weight || 1) * visual.linkWidth))).linkDirectionalParticles((link: any) => visual.showDirectionalParticles && link.directed ? isIncident(link) ? 5 : activeId ? 0 : 1 : 0).linkDirectionalParticleColor(() => activeColor).linkLabel((link: any) => `<div class="graph-tooltip"><b>${escapeHtml(String(link.type || "related"))}</b><span>${escapeHtml(endpointId(link.source))} → ${escapeHtml(endpointId(link.target))}</span></div>`).graphData(graph).d3Force("cluster", clusterForce(graph.nodes, clusters, layout.clusterStrength)).d3Force("semanticAxes", createSemanticAxesForce(graph.nodes, graph.links, clusters, axes));
     const charge = instance.d3Force("charge");
     charge?.strength?.(layout.chargeStrength);
     const linkForce = instance.d3Force("link");
