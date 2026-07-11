@@ -11,3 +11,4 @@
 - exportação e autosave local;
 - testes, documentação, responsividade e temas.
 - distribuição estática Vite e workflow de GitHub Pages após falha do runtime Worker original.
+- correção do layout mobile para iniciar com o canvas livre e manter os drawers mutuamente exclusivos.
