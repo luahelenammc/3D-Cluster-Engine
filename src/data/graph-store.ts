@@ -52,6 +52,7 @@ export class GraphStore {
   addCluster(cluster: ClusterDefinition) { this.commit({ ...this.dataset, clusters: [...(this.dataset.clusters || []), cluster] }); }
   updateCluster(id: string, patch: Partial<ClusterDefinition>) { this.commit({ ...this.dataset, clusters: (this.dataset.clusters || []).map((cluster) => cluster.id === id ? { ...cluster, ...patch } : cluster) }); }
   setLayout(patch: GraphDataset["layout"]) { this.commit({ ...this.dataset, layout: { ...this.dataset.layout, ...patch } }); }
+  setVisual(patch: GraphDataset["visual"]) { this.commit({ ...this.dataset, visual: { ...this.dataset.visual, ...patch } }); }
   applyPositions(positions: Record<string, { x: number; y: number; z: number }>) { this.commit({ ...this.dataset, layout: { ...this.dataset.layout, mode: "baked" }, nodes: this.dataset.nodes.map((node) => positions[node.id] ? { ...node, position: { ...positions[node.id] } } : node) }); }
   clearPositions() { this.commit({ ...this.dataset, layout: { ...this.dataset.layout, mode: "live" }, nodes: this.dataset.nodes.map((node) => { const next = clone(node); delete next.position; return next; }) }); }
   undo() { const prev = this.past.pop(); if (!prev) return; this.future.push(clone(this.dataset)); this.dataset = prev; this.dirty = true; this.emit(); }
