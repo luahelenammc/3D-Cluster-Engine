@@ -45,15 +45,39 @@ export interface ClusterDefinition {
   metadata?: Record<string, unknown>;
 }
 
+export type AxisDimension = "x" | "y" | "z";
+export type SemanticAxisSource = "field" | "cluster" | "degree" | "inDegree" | "outDegree" | "graphDepth" | "stableIndex";
+export type SemanticAxisMissing = "center" | "min" | "max" | "graphDepth" | "stableIndex";
+
 export interface AxisConfig {
   enabled: boolean;
   field: string;
-  dimension: "x" | "y" | "z";
+  dimension: AxisDimension;
   min?: number;
   max?: number;
   invert?: boolean;
   strength?: number;
   label?: string;
+}
+
+export interface SemanticAxisConfig {
+  enabled: boolean;
+  source: SemanticAxisSource;
+  field?: string;
+  label: string;
+  min?: number;
+  max?: number;
+  invert?: boolean;
+  strength?: number;
+  span?: number;
+  missing?: SemanticAxisMissing;
+}
+
+export interface SemanticAxesConfig {
+  enabled: boolean;
+  x: SemanticAxisConfig;
+  y: SemanticAxisConfig;
+  z: SemanticAxisConfig;
 }
 
 export interface LayoutConfig {
@@ -66,6 +90,8 @@ export interface LayoutConfig {
   collisionPadding: number;
   warmupTicks: number;
   cooldownTicks: number;
+  axes?: SemanticAxesConfig;
+  /** @deprecated Compatibility bridge for datasets created before semantic 3-axis positioning. */
   axis?: AxisConfig;
 }
 
@@ -100,6 +126,7 @@ export interface GraphDataset {
 }
 
 export interface RuntimeNode extends GraphNode {
+  semanticTarget?: GraphPosition;
   x?: number;
   y?: number;
   z?: number;
@@ -139,13 +166,18 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
   mode: "live",
   dimensions: 3,
   seed: "lms-default",
-  clusterStrength: 0.14,
+  clusterStrength: 0.05,
   chargeStrength: -72,
   linkDistance: 54,
   collisionPadding: 3,
   warmupTicks: 80,
   cooldownTicks: 420,
-  axis: { enabled: true, field: "level", dimension: "y", strength: 0.18, label: "Level" },
+  axes: {
+    enabled: true,
+    x: { enabled: true, source: "cluster", label: "Território", strength: 0.34, span: 280, missing: "stableIndex" },
+    y: { enabled: true, source: "field", field: "level", label: "Progressão", strength: 0.34, span: 260, missing: "graphDepth" },
+    z: { enabled: true, source: "degree", label: "Centralidade relacional", strength: 0.28, span: 220, missing: "center" },
+  },
 };
 
 export const DEFAULT_VISUAL: VisualConfig = {
