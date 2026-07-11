@@ -10,8 +10,44 @@
     "clusters": { "type": "array" },
     "nodes": { "type": "array", "items": { "type": "object", "required": ["id", "label", "cluster"] } },
     "links": { "type": "array", "items": { "type": "object", "required": ["source", "target"] } },
-    "layout": { "type": "object" },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "axes": {
+          "type": "object",
+          "required": ["enabled", "x", "y", "z"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "x": { "$ref": "#/$defs/semanticAxis" },
+            "y": { "$ref": "#/$defs/semanticAxis" },
+            "z": { "$ref": "#/$defs/semanticAxis" }
+          }
+        },
+        "axis": { "type": "object", "description": "Legacy single-axis compatibility field." }
+      },
+      "additionalProperties": true
+    },
     "visual": { "type": "object" }
+  },
+  "$defs": {
+    "semanticAxis": {
+      "type": "object",
+      "required": ["enabled", "source", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "source": { "enum": ["field", "cluster", "degree", "inDegree", "outDegree", "graphDepth", "stableIndex"] },
+        "field": { "type": "string" },
+        "label": { "type": "string", "minLength": 1 },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "invert": { "type": "boolean" },
+        "strength": { "type": "number", "minimum": 0 },
+        "span": { "type": "number", "exclusiveMinimum": 0 },
+        "missing": { "enum": ["center", "min", "max", "graphDepth", "stableIndex"] }
+      }
+    }
   },
   "additionalProperties": false
 }
