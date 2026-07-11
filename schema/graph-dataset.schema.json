@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://localmoon.source/schema/graph-dataset-1.0.json",
+  "title": "LMS 3D Cluster Engine dataset",
+  "type": "object",
+  "required": ["schemaVersion", "meta", "nodes", "links"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "meta": { "type": "object", "required": ["id", "title", "version"] },
+    "clusters": { "type": "array" },
+    "nodes": { "type": "array", "items": { "type": "object", "required": ["id", "label", "cluster"] } },
+    "links": { "type": "array", "items": { "type": "object", "required": ["source", "target"] } },
+    "layout": { "type": "object" },
+    "visual": { "type": "object" }
+  },
+  "additionalProperties": false
+}

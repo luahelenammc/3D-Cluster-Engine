@@ -1,0 +1,39 @@
+{
+  "name": "lms-3d-cluster-engine",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run && npm run build",
+    "test:unit": "vitest run",
+    "lint": "eslint src tests/unit"
+  },
+  "dependencies": {
+    "3d-force-graph": "^1.80.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "d3-force-3d": "^3.0.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "^0.185.1",
+    "@vitejs/plugin-react": "6.0.2",
+    "eslint": "9.39.4",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.59.3",
+    "vite": "8.0.13",
+    "vitest": "^4.1.10"
+  },
+  "type": "module",
+  "displayName": "LMS 3D Cluster Engine"
+}

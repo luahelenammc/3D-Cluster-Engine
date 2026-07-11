@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "meta": {
+    "id": "lms-constellation-demo",
+    "title": "Constelação de Conhecimento",
+    "description": "Um dataset genérico para explorar clusters, pontes e níveis sem semântica de projeto acoplada.",
+    "version": "1.0.0",
+    "tags": ["demo", "generic"]
+  },
+  "clusters": [
+    { "id": "signals", "label": "Signals", "color": "#8f7cff", "description": "Observações e entradas." },
+    { "id": "models", "label": "Models", "color": "#3ed6b2", "description": "Estruturas explicativas." },
+    { "id": "bridges", "label": "Bridges", "color": "#ffb45e", "description": "Conexões entre regiões." },
+    { "id": "outcomes", "label": "Outcomes", "color": "#ff6f91", "description": "Aplicações e efeitos." }
+  ],
+  "nodes": [
+    { "id": "signal-01", "label": "Weak Signal", "cluster": "signals", "value": 7, "level": 1, "tags": ["input"], "metadata": { "summary": "Uma observação ainda sem explicação estável." } },
+    { "id": "signal-02", "label": "Pattern Echo", "cluster": "signals", "value": 9, "level": 2, "tags": ["pattern"], "metadata": { "summary": "Recorrência detectada em fontes distintas." } },
+    { "id": "signal-03", "label": "Anomaly", "cluster": "signals", "value": 5, "level": 3, "tags": ["edge"], "metadata": { "summary": "Algo que resiste ao modelo atual." } },
+    { "id": "model-01", "label": "Working Model", "cluster": "models", "value": 12, "level": 3, "tags": ["core"], "metadata": { "summary": "Modelo provisório que organiza sinais." } },
+    { "id": "model-02", "label": "Constraint Map", "cluster": "models", "value": 8, "level": 4, "tags": ["limits"], "metadata": { "summary": "Mapa de limites e condições." } },
+    { "id": "model-03", "label": "Countermodel", "cluster": "models", "value": 6, "level": 5, "tags": ["critique"], "metadata": { "summary": "Alternativa que testa a robustez do modelo." } },
+    { "id": "bridge-01", "label": "Translation Bridge", "cluster": "bridges", "value": 10, "level": 4, "tags": ["interface"], "metadata": { "summary": "Traduz estruturas entre contextos." } },
+    { "id": "bridge-02", "label": "Transfer Test", "cluster": "bridges", "value": 7, "level": 5, "tags": ["test"], "metadata": { "summary": "Verifica se uma estrutura viaja sem perder sentido." } },
+    { "id": "bridge-03", "label": "Feedback Loop", "cluster": "bridges", "value": 9, "level": 6, "tags": ["loop"], "metadata": { "summary": "Devolve resultados ao modelo." } },
+    { "id": "outcome-01", "label": "Decision", "cluster": "outcomes", "value": 11, "level": 6, "tags": ["action"], "metadata": { "summary": "Uma escolha apoiada pelo mapa." } },
+    { "id": "outcome-02", "label": "Artifact", "cluster": "outcomes", "value": 8, "level": 7, "tags": ["output"], "metadata": { "summary": "Objeto reutilizável produzido pelo sistema." } },
+    { "id": "outcome-03", "label": "New Question", "cluster": "outcomes", "value": 6, "level": 8, "tags": ["recursive"], "metadata": { "summary": "Uma saída que reabre o campo de investigação." } }
+  ],
+  "links": [
+    { "id": "l01", "source": "signal-01", "target": "signal-02", "type": "amplifies", "weight": 1, "directed": true },
+    { "id": "l02", "source": "signal-02", "target": "model-01", "type": "informs", "weight": 2, "directed": true },
+    { "id": "l03", "source": "signal-03", "target": "model-03", "type": "challenges", "weight": 1, "directed": true },
+    { "id": "l04", "source": "model-01", "target": "model-02", "type": "contains", "weight": 1 },
+    { "id": "l05", "source": "model-02", "target": "bridge-01", "type": "feeds", "weight": 2, "directed": true },
+    { "id": "l06", "source": "model-03", "target": "bridge-02", "type": "tests", "weight": 1, "directed": true },
+    { "id": "l07", "source": "bridge-01", "target": "outcome-01", "type": "enables", "weight": 2, "directed": true },
+    { "id": "l08", "source": "bridge-02", "target": "outcome-02", "type": "validates", "weight": 1, "directed": true },
+    { "id": "l09", "source": "outcome-01", "target": "bridge-03", "type": "returns", "weight": 1, "directed": true },
+    { "id": "l10", "source": "bridge-03", "target": "model-01", "type": "refines", "weight": 2, "directed": true },
+    { "id": "l11", "source": "outcome-02", "target": "outcome-03", "type": "produces", "weight": 1, "directed": true },
+    { "id": "l12", "source": "outcome-03", "target": "signal-01", "type": "renews", "weight": 1, "directed": true }
+  ],
+  "layout": { "mode": "live", "dimensions": 3, "seed": "lms-constellation", "clusterStrength": 0.16, "chargeStrength": -75, "linkDistance": 58, "collisionPadding": 3, "warmupTicks": 100, "cooldownTicks": 500, "axis": { "enabled": true, "field": "level", "dimension": "y", "strength": 0.2, "label": "Level" } },
+  "visual": { "background": "#080b12", "nodeSizeMin": 3, "nodeSizeMax": 13, "linkOpacity": 0.3, "linkWidth": 0.7, "showLabels": "hover", "showDirectionalParticles": true, "dimUnrelatedOnSelection": true }
+}
