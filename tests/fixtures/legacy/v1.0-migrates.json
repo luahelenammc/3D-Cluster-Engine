@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "meta": { "id": "legacy", "title": "Legacy", "version": "1.0.0" },
+  "nodes": [
+    { "id": "n1", "label": "One", "cluster": "a", "level": 1 },
+    { "id": "n2", "label": "Two", "cluster": "b", "level": 2 }
+  ],
+  "links": [{ "source": "n1", "target": "n2", "type": "related", "directed": true }],
+  "layout": { "axis": { "enabled": true, "field": "level", "dimension": "y", "label": "Legacy level" } }
+}

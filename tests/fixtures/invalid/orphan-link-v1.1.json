@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.1",
+  "meta": { "id": "orphan", "title": "Orphan", "version": "1.0.0" },
+  "clusters": [{ "id": "a", "label": "A" }],
+  "nodes": [{ "id": "n1", "label": "One", "cluster": "a" }],
+  "links": [{ "id": "l1", "source": "n1", "target": "missing" }]
+}

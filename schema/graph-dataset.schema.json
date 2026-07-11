@@ -1,36 +1,95 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://localmoon.source/schema/graph-dataset-1.0.json",
-  "title": "LMS 3D Cluster Engine dataset",
+  "$id": "https://localmoon.source/schema/graph-dataset-1.1.json",
+  "title": "LMS 3D Cluster Engine canonical dataset",
+  "description": "Strict canonical contract consumed by LMS 3D Cluster Engine. External dialects must be normalized before entering this shape.",
   "type": "object",
-  "required": ["schemaVersion", "meta", "nodes", "links"],
+  "required": ["schemaVersion", "meta", "clusters", "nodes", "links"],
+  "additionalProperties": false,
   "properties": {
-    "schemaVersion": { "const": "1.0" },
-    "meta": { "type": "object", "required": ["id", "title", "version"] },
-    "clusters": { "type": "array" },
-    "nodes": { "type": "array", "items": { "type": "object", "required": ["id", "label", "cluster"] } },
-    "links": { "type": "array", "items": { "type": "object", "required": ["source", "target"] } },
-    "layout": {
+    "schemaVersion": { "const": "1.1" },
+    "meta": { "$ref": "#/$defs/meta" },
+    "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "links": { "type": "array", "items": { "$ref": "#/$defs/link" } },
+    "layout": { "$ref": "#/$defs/layout" },
+    "visual": { "$ref": "#/$defs/visual" },
+    "extensions": {
       "type": "object",
-      "properties": {
-        "axes": {
-          "type": "object",
-          "required": ["enabled", "x", "y", "z"],
-          "additionalProperties": false,
-          "properties": {
-            "enabled": { "type": "boolean" },
-            "x": { "$ref": "#/$defs/semanticAxis" },
-            "y": { "$ref": "#/$defs/semanticAxis" },
-            "z": { "$ref": "#/$defs/semanticAxis" }
-          }
-        },
-        "axis": { "type": "object", "description": "Legacy single-axis compatibility field." }
-      },
+      "description": "Namespaced project-specific payload that the core preserves but does not interpret.",
       "additionalProperties": true
-    },
-    "visual": { "type": "object" }
+    }
   },
   "$defs": {
+    "metadata": { "type": "object", "additionalProperties": true },
+    "meta": {
+      "type": "object",
+      "required": ["id", "title", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "version": { "type": "string", "minLength": 1 },
+        "source": { "type": "string" },
+        "license": { "type": "string" },
+        "attribution": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+      }
+    },
+    "position": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "additionalProperties": false,
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }
+    },
+    "cluster": {
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "color": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "label", "cluster"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "cluster": { "type": "string", "minLength": 1 },
+        "value": { "type": "number", "minimum": 0 },
+        "level": { "type": "number" },
+        "color": { "type": "string", "minLength": 1 },
+        "visible": { "type": "boolean" },
+        "pinned": { "type": "boolean" },
+        "position": { "$ref": "#/$defs/position" },
+        "tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    },
+    "link": {
+      "type": "object",
+      "required": ["id", "source", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "weight": { "type": "number", "minimum": 0 },
+        "directed": { "type": "boolean" },
+        "visible": { "type": "boolean" },
+        "color": { "type": "string", "minLength": 1 },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    },
     "semanticAxis": {
       "type": "object",
       "required": ["enabled", "source", "label"],
@@ -38,7 +97,7 @@
       "properties": {
         "enabled": { "type": "boolean" },
         "source": { "enum": ["field", "cluster", "degree", "inDegree", "outDegree", "graphDepth", "stableIndex"] },
-        "field": { "type": "string" },
+        "field": { "type": "string", "minLength": 1 },
         "label": { "type": "string", "minLength": 1 },
         "min": { "type": "number" },
         "max": { "type": "number" },
@@ -46,8 +105,54 @@
         "strength": { "type": "number", "minimum": 0 },
         "span": { "type": "number", "exclusiveMinimum": 0 },
         "missing": { "enum": ["center", "min", "max", "graphDepth", "stableIndex"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "source": { "const": "field" } }, "required": ["source"] },
+          "then": { "required": ["field"] }
+        }
+      ]
+    },
+    "axes": {
+      "type": "object",
+      "required": ["enabled", "x", "y", "z"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "x": { "$ref": "#/$defs/semanticAxis" },
+        "y": { "$ref": "#/$defs/semanticAxis" },
+        "z": { "$ref": "#/$defs/semanticAxis" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["live", "baked", "hybrid"] },
+        "dimensions": { "const": 3 },
+        "seed": { "type": "string", "minLength": 1 },
+        "clusterStrength": { "type": "number", "minimum": 0 },
+        "chargeStrength": { "type": "number" },
+        "linkDistance": { "type": "number", "exclusiveMinimum": 0 },
+        "collisionPadding": { "type": "number", "minimum": 0 },
+        "warmupTicks": { "type": "integer", "minimum": 0 },
+        "cooldownTicks": { "type": "integer", "minimum": 0 },
+        "axes": { "$ref": "#/$defs/axes" }
+      }
+    },
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "background": { "type": "string", "minLength": 1 },
+        "nodeSizeMin": { "type": "number", "minimum": 0 },
+        "nodeSizeMax": { "type": "number", "minimum": 0 },
+        "linkOpacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "linkWidth": { "type": "number", "minimum": 0 },
+        "showLabels": { "enum": ["never", "hover", "selected", "always"] },
+        "showDirectionalParticles": { "type": "boolean" },
+        "dimUnrelatedOnSelection": { "type": "boolean" }
       }
     }
-  },
-  "additionalProperties": false
+  }
 }
