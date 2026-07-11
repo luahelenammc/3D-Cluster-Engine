@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import ClusterEngine from "./ui/ClusterEngine";
 import "../app/globals.css";
+import "../app/semantic-axes.css";
 
 const root = document.getElementById("root");
 
