@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.1",
+  "meta": { "id": "missing-link-id", "title": "Missing link ID", "version": "1.0.0" },
+  "clusters": [{ "id": "a", "label": "A" }],
+  "nodes": [{ "id": "n1", "label": "One", "cluster": "a" }, { "id": "n2", "label": "Two", "cluster": "a" }],
+  "links": [{ "source": "n1", "target": "n2" }]
+}
