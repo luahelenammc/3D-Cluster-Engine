@@ -1,9 +1,22 @@
 import Ajv from "ajv";
-import type { GraphDataset, ValidationIssue } from "../core/types";
+import type { AxisDimension, GraphDataset, ValidationIssue } from "../core/types";
 import { graphDatasetSchema } from "./schema";
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 const structural = ajv.compile(graphDatasetSchema);
+const axisDimensions: AxisDimension[] = ["x", "y", "z"];
+const axisSources = new Set(["field", "cluster", "degree", "inDegree", "outDegree", "graphDepth", "stableIndex"]);
+
+function readNumericField(node: GraphDataset["nodes"][number], path: string): number | undefined {
+  const segments = path.split(".").filter(Boolean);
+  let current: unknown = node;
+  for (const segment of segments) {
+    if (!current || typeof current !== "object") return undefined;
+    current = (current as Record<string, unknown>)[segment];
+  }
+  const value = Number(current);
+  return Number.isFinite(value) ? value : undefined;
+}
 
 export function validateDataset(input: unknown): { valid: boolean; issues: ValidationIssue[]; dataset?: GraphDataset } {
   const issues: ValidationIssue[] = [];
@@ -30,6 +43,28 @@ export function validateDataset(input: unknown): { valid: boolean; issues: Valid
     if (linkKeys.has(key)) issues.push({ severity: "warning", path: `/links/${index}`, message: "Link possivelmente duplicado." });
     linkKeys.add(key);
   });
+
+  const axes = dataset.layout?.axes;
+  if (axes?.enabled) {
+    axisDimensions.forEach((dimension) => {
+      const axis = axes[dimension];
+      if (!axis) {
+        issues.push({ severity: "error", path: `/layout/axes/${dimension}`, message: `Configuração ausente para o eixo ${dimension.toUpperCase()}.` });
+        return;
+      }
+      if (!axisSources.has(axis.source)) {
+        issues.push({ severity: "error", path: `/layout/axes/${dimension}/source`, message: `Fonte de eixo desconhecida: ${String(axis.source)}` });
+      }
+      if (axis.source === "field") {
+        if (!axis.field?.trim()) {
+          issues.push({ severity: "error", path: `/layout/axes/${dimension}/field`, message: `O eixo ${dimension.toUpperCase()} usa campo numérico, mas nenhum campo foi informado.` });
+        } else if (!dataset.nodes.some((node) => readNumericField(node, axis.field!) !== undefined)) {
+          issues.push({ severity: "warning", path: `/layout/axes/${dimension}/field`, message: `Nenhum nó possui valor numérico em ${axis.field}.`, suggestion: `O fallback ${axis.missing || "center"} será usado.` });
+        }
+      }
+    });
+  }
+
   if (dataset.nodes.length > 2000) issues.push({ severity: "warning", path: "/nodes", message: "Dataset grande: a qualidade visual poderá ser reduzida automaticamente." });
   return { valid: !issues.some((issue) => issue.severity === "error"), issues, dataset };
 }
