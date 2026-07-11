@@ -2,13 +2,25 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { clusterColor } from "../core/colors";
-import type { GraphDataset, GraphLink, GraphNode, RuntimeGraph, ValidationIssue } from "../core/types";
+import { resolveSemanticAxes } from "../core/spatial";
+import type { AxisDimension, GraphDataset, GraphLink, GraphNode, RuntimeGraph, SemanticAxisConfig, SemanticAxisSource, ValidationIssue } from "../core/types";
 import { importFiles, downloadDataset } from "../data/adapters";
 import { GraphStore } from "../data/graph-store";
 import { validateDataset } from "../data/validate";
 import { GraphCanvas, type GraphCanvasApi } from "../renderer/GraphCanvas";
 
 type Toast = { type: "ok" | "error" | "info"; message: string } | null;
+
+const AXIS_DIMENSIONS: AxisDimension[] = ["x", "y", "z"];
+const AXIS_SOURCES: Array<{ value: SemanticAxisSource; label: string }> = [
+  { value: "cluster", label: "Cluster / território" },
+  { value: "field", label: "Campo numérico" },
+  { value: "degree", label: "Conexões totais" },
+  { value: "inDegree", label: "Entradas" },
+  { value: "outDegree", label: "Saídas" },
+  { value: "graphDepth", label: "Profundidade do grafo" },
+  { value: "stableIndex", label: "Ordem estável" },
+];
 
 function idOf(endpoint: string | GraphNode) { return typeof endpoint === "string" ? endpoint : endpoint.id; }
 function isMobileViewport() { return typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches; }
@@ -70,6 +82,7 @@ export default function ClusterEngine() {
   }, []);
 
   const clusters = dataset?.clusters || [];
+  const axes = resolveSemanticAxes(dataset?.layout);
   const linkTypes = useMemo(() => [...new Set((dataset?.links || []).map((link) => link.type || "related"))], [dataset]);
   const selectedNode = dataset?.nodes.find((node) => node.id === selectedId) || null;
   const searchResults = useMemo(() => {
@@ -117,6 +130,11 @@ export default function ClusterEngine() {
       if (next && isMobileViewport()) setLeftOpen(false);
       return next;
     });
+  }
+
+  function updateAxis(dimension: AxisDimension, patch: Partial<SemanticAxisConfig>) {
+    if (!store) return;
+    store.setLayout({ axes: { ...axes, [dimension]: { ...axes[dimension], ...patch } } });
   }
 
   async function handleFiles(files: File[]) {
@@ -170,9 +188,20 @@ export default function ClusterEngine() {
       {showSettings && <section className="settings-popover">
         <div><strong>Layout</strong><button className="close-button" onClick={() => setShowSettings(false)}>×</button></div>
         <label>Modo<select value={dataset.layout?.mode || "live"} onChange={(event) => store.setLayout({ mode: event.target.value as "live" | "baked" | "hybrid" })}><option value="live">Live</option><option value="hybrid">Hybrid</option><option value="baked">Baked</option></select></label>
-        <label>Força dos clusters<input type="range" min="0" max="0.35" step="0.01" value={dataset.layout?.clusterStrength ?? 0.14} onChange={(event) => store.setLayout({ clusterStrength: Number(event.target.value) })} /></label>
+        <label>Coesão secundária dos clusters<input type="range" min="0" max="0.18" step="0.01" value={dataset.layout?.clusterStrength ?? 0.05} onChange={(event) => store.setLayout({ clusterStrength: Number(event.target.value) })} /></label>
         <label>Labels<select value={dataset.visual?.showLabels || "hover"} onChange={(event) => store.setVisual({ showLabels: event.target.value as "never" | "hover" | "selected" | "always" })}><option value="never">Nunca</option><option value="hover">Relevantes + contexto</option><option value="selected">Somente contexto</option><option value="always">Todos</option></select></label>
-        <label className="switch-row"><input type="checkbox" checked={dataset.layout?.axis?.enabled ?? true} onChange={(event) => store.setLayout({ axis: { ...(dataset.layout?.axis || { field: "level", dimension: "y", strength: 0.18 }), enabled: event.target.checked } })} /> Eixo por level</label>
+        <label className="switch-row"><input type="checkbox" checked={axes.enabled} onChange={(event) => store.setLayout({ axes: { ...axes, enabled: event.target.checked } })} /> Posicionamento semântico por 3 eixos</label>
+        {axes.enabled && <div className="axis-settings">
+          {AXIS_DIMENSIONS.map((dimension) => {
+            const axis = axes[dimension];
+            return <section className="axis-setting" key={dimension}>
+              <div className="axis-setting-head"><b>{dimension.toUpperCase()}</b><span>{axis.label}</span></div>
+              <label>Significado<input type="text" value={axis.label} onChange={(event) => updateAxis(dimension, { label: event.target.value })} /></label>
+              <label>Fonte<select value={axis.source} onChange={(event) => updateAxis(dimension, { source: event.target.value as SemanticAxisSource })}>{AXIS_SOURCES.map((source) => <option key={source.value} value={source.value}>{source.label}</option>)}</select></label>
+              {axis.source === "field" && <label>Campo<input type="text" value={axis.field || ""} onChange={(event) => updateAxis(dimension, { field: event.target.value })} placeholder="level ou metadata.maturity" /></label>}
+            </section>;
+          })}
+        </div>}
         <div className="button-row"><button onClick={() => { graphApi.current?.pause(); store.applyPositions(graphApi.current?.getPositions() || {}); setToast({ type: "ok", message: "Layout gravado no dataset." }); }}>Bake layout</button><button onClick={() => { store.clearPositions(); graphApi.current?.reheat(); }}>Limpar bake</button></div>
         <button onClick={() => { setShowSettings(false); setShowJsonEditor(true); }}>Editar JSON canônico</button>
         <button onClick={restoreAutosave}>Restaurar autosave local</button>
@@ -192,14 +221,14 @@ export default function ClusterEngine() {
 
         <section className="canvas-stage">
           <GraphCanvas ref={graphApi} graph={visibleGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} onSelect={selectNode} onSimulation={setSimulation} />
-          <div className="axis-caption"><span>nível semântico</span><i /></div>
+          <div className="axes-caption" aria-hidden="true">{axes.enabled ? AXIS_DIMENSIONS.map((dimension) => <span key={dimension}><b>{dimension.toUpperCase()}</b>{axes[dimension].label}</span>) : <span><b>·</b>layout livre</span>}</div>
           <button className="inspector-toggle" onClick={toggleRightPanel} aria-label="Alternar inspector">{rightOpen ? "›" : "‹"}</button>
         </section>
 
         {rightOpen && <Inspector dataset={dataset} node={selectedNode} store={store} onSelect={selectNode} onFocus={(id) => graphApi.current?.focus(id)} onToast={setToast} />}
       </section>
 
-      <footer className="statusbar"><span><i className={`status-light ${simulation}`} /> física: {simulation}</span><span>{visibleGraph.nodes.length}/{dataset.nodes.length} nós visíveis</span><span>{visibleGraph.links.length}/{dataset.links.length} links visíveis</span><span>layout: {dataset.layout?.mode || "live"}</span><span>{issues.length ? `${issues.length} aviso(s)` : "dados válidos"}</span><span className="status-spacer" /><span>arraste · órbita · scroll zoom</span></footer>
+      <footer className="statusbar"><span><i className={`status-light ${simulation}`} /> física: {simulation}</span><span>{visibleGraph.nodes.length}/{dataset.nodes.length} nós visíveis</span><span>{visibleGraph.links.length}/{dataset.links.length} links visíveis</span><span>layout: {dataset.layout?.mode || "live"}</span><span>{axes.enabled ? "eixos: semânticos" : "eixos: livres"}</span><span>{issues.length ? `${issues.length} aviso(s)` : "dados válidos"}</span><span className="status-spacer" /><span>arraste · órbita · scroll zoom</span></footer>
       {toast && <div className={`toast ${toast.type}`}>{toast.message}</div>}
       {showAddNode && <AddNodeDialog dataset={dataset} onClose={() => setShowAddNode(false)} onAdd={(node) => { try { store.addNode(node); setShowAddNode(false); setSelectedId(node.id); setToast({ type: "ok", message: "Nó criado." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao criar nó." }); } }} />}
       {showAddLink && <AddLinkDialog dataset={dataset} onClose={() => setShowAddLink(false)} onAdd={(link) => { try { store.addLink(link); setShowAddLink(false); setToast({ type: "ok", message: "Link criado." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao criar link." }); } }} />}
@@ -237,5 +266,5 @@ function JsonEditorDialog({ dataset, onClose, onApply }: { dataset: GraphDataset
   const [value, setValue] = useState(JSON.stringify(dataset, null, 2));
   const [error, setError] = useState("");
   function apply() { try { const parsed = JSON.parse(value) as GraphDataset; const result = validateDataset(parsed); if (!result.valid) throw new Error(result.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("\n")); onApply(parsed); } catch (cause) { setError(cause instanceof Error ? cause.message : "JSON inválido."); } }
-  return <Modal title="Editor canônico" onClose={onClose}><p className="modal-note">Autoridade total sobre nós, links, clusters e configuração. A aplicação só aceita o corpo quando ele passa pela validação estrutural e semântica.</p><textarea className="json-editor" value={value} onChange={(event) => { setValue(event.target.value); setError(""); }} spellCheck={false} aria-label="Dataset canônico JSON" />{error && <pre className="validation-error">{error}</pre>}<div className="modal-actions"><button onClick={onClose}>Cancelar</button><button className="primary-button" onClick={apply}>Validar e aplicar</button></div></Modal>;
+  return <Modal title="Editor canônico" onClose={onClose}><p className="modal-note">Autoridade total sobre nós, links, clusters e configuração. A aplicação só aceita o corpo quando ele passa pela validação estrutural e semântica.</p><textarea className="json-editor" value={value} onChange={(event) => { setValue(event.target.value); setError(""); }} spellCheck={false} />{error && <pre className="validation-error">{error}</pre>}<div className="modal-actions"><button onClick={onClose}>Cancelar</button><button className="primary-button" onClick={apply}>Validar e aplicar</button></div></Modal>;
 }
