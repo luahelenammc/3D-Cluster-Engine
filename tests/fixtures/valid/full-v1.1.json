@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.1",
+  "meta": {
+    "id": "full",
+    "title": "Full Contract Fixture",
+    "description": "Exercises every canonical field.",
+    "version": "1.2.3",
+    "source": "local",
+    "license": "UNLICENSED",
+    "attribution": ["Moon"],
+    "tags": ["fixture", "full"]
+  },
+  "clusters": [
+    { "id": "a", "label": "A", "color": "#8f7cff", "description": "Alpha", "visible": true, "metadata": { "order": 1 } },
+    { "id": "b", "label": "B", "color": "#3ed6b2", "visible": true, "metadata": { "order": 2 } }
+  ],
+  "nodes": [
+    { "id": "n1", "label": "One", "cluster": "a", "value": 3, "level": 1, "color": "#ffffff", "visible": true, "pinned": false, "position": { "x": 1, "y": 2, "z": 3 }, "tags": ["first"], "metadata": { "maturity": 0.2, "nested": { "enabled": true } } },
+    { "id": "n2", "label": "Two", "cluster": "b", "value": 5, "level": 2, "visible": true, "tags": ["second"], "metadata": { "maturity": 0.8 } }
+  ],
+  "links": [
+    { "id": "l1", "source": "n1", "target": "n2", "type": "supports", "weight": 2, "directed": true, "visible": true, "color": "#ffffff", "metadata": { "confidence": 0.9 } }
+  ],
+  "layout": {
+    "mode": "hybrid",
+    "dimensions": 3,
+    "seed": "fixture",
+    "clusterStrength": 0.05,
+    "chargeStrength": -72,
+    "linkDistance": 54,
+    "collisionPadding": 3,
+    "warmupTicks": 80,
+    "cooldownTicks": 420,
+    "axes": {
+      "enabled": true,
+      "x": { "enabled": true, "source": "cluster", "label": "Territory", "strength": 0.3, "span": 280, "missing": "stableIndex" },
+      "y": { "enabled": true, "source": "field", "field": "metadata.maturity", "label": "Maturity", "min": 0, "max": 1, "strength": 0.3, "span": 260, "missing": "center" },
+      "z": { "enabled": true, "source": "degree", "label": "Connectivity", "invert": false, "strength": 0.25, "span": 220, "missing": "center" }
+    }
+  },
+  "visual": {
+    "background": "#080b12",
+    "nodeSizeMin": 3,
+    "nodeSizeMax": 13,
+    "linkOpacity": 0.3,
+    "linkWidth": 0.7,
+    "showLabels": "hover",
+    "showDirectionalParticles": true,
+    "dimUnrelatedOnSelection": true
+  },
+  "extensions": { "example.namespace": { "preserved": true } }
+}
