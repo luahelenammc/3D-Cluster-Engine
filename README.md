@@ -6,6 +6,26 @@ Uma engine web genérica para visualizar, explorar e editar grafos 3D organizado
 
 O projeto é uma SPA Vite inteiramente estática. Todo push para `main` executa lint, testes, build e publicação pelo workflow `.github/workflows/deploy-pages.yml`. Pull requests e branches de trabalho passam por `.github/workflows/validate.yml`.
 
+Superfície pública:
+
+```text
+https://luahelenammc.github.io/3D-Cluster-Engine/
+```
+
+## Biblioteca de projetos publicados
+
+Datasets persistentes vivem em `public/datasets/<dataset_id>/dataset.json` e tornam-se selecionáveis quando recebem uma entrada válida em `public/datasets/registry.json`.
+
+Abertura direta:
+
+```text
+https://luahelenammc.github.io/3D-Cluster-Engine/?dataset=<dataset_id>
+```
+
+O registry possui contrato próprio em `schema/dataset-registry.schema.json`. Antes de publicar um novo corpus, siga `docs/DATASET_PUBLISHING_PROTOCOL.md`: inventário, decisão ontológica, fixture pequena, dataset canônico 1.1, validação, registro, CI, deploy e inspeção pública.
+
+Importações manuais continuam locais. Carregar um JSON pelo navegador não o adiciona automaticamente à biblioteca pública.
+
 ## O que já funciona
 
 - renderer WebGL com órbita, zoom, foco e fit;
@@ -19,6 +39,7 @@ O projeto é uma SPA Vite inteiramente estática. Todo push para `main` executa 
 - normalização explícita de formatos externos e migração 1.0 → 1.1;
 - importação de JSON canônico, split JSON, CSV e bundle Marble;
 - exportação para JSON canônico com validação antes da serialização;
+- registry público, seletor de projetos e URLs compartilháveis por dataset;
 - layout live, hybrid e baked;
 - autosave local, undo/redo, temas e painéis responsivos.
 
@@ -65,7 +86,8 @@ Documentação completa:
 
 - `docs/DATA_CONTRACT.md`;
 - `docs/COMPATIBILITY_MATRIX.md`;
-- `docs/MIGRATION_1.0_TO_1.1.md`.
+- `docs/MIGRATION_1.0_TO_1.1.md`;
+- `docs/DATASET_PUBLISHING_PROTOCOL.md`.
 
 ## Pipeline externo → interno
 
@@ -129,14 +151,15 @@ Acima do envelope desktop, a validação emite warnings. Acima da fronteira de s
 
 ## Arquitetura
 
-- `schema`: contrato público único;
+- `schema`: contratos públicos do dataset e do registry;
 - `src/data/normalize.ts`: migração e alfândega;
 - `src/data/adapters.ts`: dialetos externos;
+- `src/data/registry.ts`: validação, resolução e carregamento de datasets publicados;
 - `src/data/validate.ts`: validação estrutural, semântica e de escala;
 - `src/data/graph-store.ts`: autoridade canônica e histórico;
 - `src/core/spatial.ts`: eixos, métricas derivadas e alvos semânticos;
 - `src/renderer`: renderer e forças 3D;
-- `src/ui`: interface e controller de interação;
+- `src/ui`: interface, shell de publicação e controller de interação;
 - `tests/fixtures`: corpos válidos, legados e deliberadamente quebrados.
 
 ## Limitações atuais
