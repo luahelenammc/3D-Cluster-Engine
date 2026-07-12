@@ -18,6 +18,18 @@ export interface DatasetRegistry {
   datasets: DatasetRegistryEntry[];
 }
 
+interface ContentManifest {
+  version: string;
+  title: string;
+  description: string;
+  clusters: GraphDataset["clusters"];
+  nodeFiles: string[];
+  linkFiles: string[];
+  protocols?: string[];
+  ontology?: string;
+  relationContract?: Record<string, unknown>;
+}
+
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 const structural = ajv.compile(registrySchema);
 
@@ -38,6 +50,67 @@ function baseWithSlash(baseUrl: string): string {
 function relationOverlayUrl(baseUrl: string, entry: DatasetRegistryEntry): string | null {
   if (entry.id !== "acl") return null;
   return `${baseWithSlash(baseUrl)}datasets/acl/relations.v1.1.json`;
+}
+
+async function fetchJson<T>(url: string, label: string, fetcher: typeof fetch): Promise<T> {
+  const response = await fetcher(url);
+  if (!response.ok) throw new Error(`${label} indisponível (${response.status}).`);
+  return await response.json() as T;
+}
+
+async function applyPoliticaContentV2(
+  rawDataset: GraphDataset,
+  baseUrl: string,
+  fetcher: typeof fetch,
+): Promise<void> {
+  const root = `${baseWithSlash(baseUrl)}datasets/politica/`;
+  const manifest = await fetchJson<ContentManifest>(
+    `${root}content-v2-manifest.json`,
+    "Manifesto substantivo politica",
+    fetcher,
+  );
+
+  const nodeBatches = await Promise.all(
+    manifest.nodeFiles.map((file) => fetchJson<GraphDataset["nodes"]>(`${root}${file}`, `Nós politica/${file}`, fetcher)),
+  );
+  const linkBatches = await Promise.all(
+    manifest.linkFiles.map((file) => fetchJson<GraphDataset["links"]>(`${root}${file}`, `Relações politica/${file}`, fetcher)),
+  );
+
+  rawDataset.meta.title = manifest.title;
+  rawDataset.meta.description = manifest.description;
+  rawDataset.meta.version = manifest.version;
+  rawDataset.meta.source = "Projeto Política — arquivos-fonte 00–04, Ecos do Abismo e metabolização relacional até 2026-07-12";
+  rawDataset.meta.tags = [
+    "politica", "brasil", "limeira", "psol", "democracia", "fisiologismo",
+    "bolsonarismo", "justica-social", "relation-metabolism-1.0", "msl-4.1",
+  ];
+  rawDataset.clusters = manifest.clusters;
+  rawDataset.nodes = nodeBatches.flat();
+  rawDataset.links = linkBatches.flat();
+  rawDataset.layout.seed = "politica-content-v2-2026-07-12";
+  rawDataset.layout.axes.x.label = "Bacia substantiva";
+  rawDataset.layout.axes.x.span = 520;
+  rawDataset.layout.axes.y.label = "Da estrutura histórica à ação pública";
+  rawDataset.layout.axes.y.span = 380;
+  rawDataset.layout.axes.z.span = 320;
+  rawDataset.extensions = {
+    ...(rawDataset.extensions || {}),
+    politica: {
+      protocols: manifest.protocols,
+      ontology: manifest.ontology,
+      relationContract: manifest.relationContract,
+      lineage: [
+        "00. Política — Kernel, Modos e Governança",
+        "01. Política — Estratégia Local, Candidatura, Partido e Alcance",
+        "02. Política — Comunicação Pública, Instagram, Comentários e Arena",
+        "03. Política — Ideologia, Newsroom, Ensaio e Mapa 8D",
+        "04. Política – História do Brasil",
+        "0.3 Ecos do Abismo - Ensaio sobre a Política Brasileira",
+      ],
+      sanitization: "public-sanitized",
+    },
+  };
 }
 
 export function parseDatasetRegistry(input: unknown): DatasetRegistry {
@@ -97,11 +170,13 @@ export async function fetchRegisteredDataset(
   if (!response.ok) throw new Error(`Dataset ${entry.id} indisponível (${response.status}).`);
 
   const rawDataset = await response.json() as GraphDataset;
+  if (entry.id === "politica") {
+    await applyPoliticaContentV2(rawDataset, baseUrl, fetcher);
+  }
+
   const overlayUrl = relationOverlayUrl(baseUrl, entry);
   if (overlayUrl) {
-    const overlayResponse = await fetcher(overlayUrl);
-    if (!overlayResponse.ok) throw new Error(`Overlay relacional ${entry.id} indisponível (${overlayResponse.status}).`);
-    const overlayLinks = await overlayResponse.json() as GraphDataset["links"];
+    const overlayLinks = await fetchJson<GraphDataset["links"]>(overlayUrl, `Overlay relacional ${entry.id}`, fetcher);
     rawDataset.links = [...rawDataset.links, ...overlayLinks];
   }
 
