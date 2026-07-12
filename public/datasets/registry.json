@@ -9,6 +9,14 @@
       "path": "demo/dataset.json",
       "tags": ["demo", "generic", "lms"],
       "featured": true
+    },
+    {
+      "id": "politica",
+      "title": "Projeto Política — mapa vivo",
+      "description": "Mapa espacial sanitizado do projeto Política de Lua Helena Moon: governança, estratégia local, comunicação pública, ideologia, ensaio e história do Brasil.",
+      "path": "politica/dataset.json",
+      "tags": ["politica", "limeira", "psol", "governance", "communication", "ideology", "history", "msl-4.1"],
+      "featured": true
     }
   ]
 }
