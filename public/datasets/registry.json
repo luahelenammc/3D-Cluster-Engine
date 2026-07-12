@@ -1,0 +1,14 @@
+{
+  "registryVersion": "1.0",
+  "defaultDataset": "demo",
+  "datasets": [
+    {
+      "id": "demo",
+      "title": "LMS 3D Cluster Engine — Demo",
+      "description": "Dataset de demonstração da engine genérica, com clusters, relações e eixos semânticos configuráveis.",
+      "path": "demo/dataset.json",
+      "tags": ["demo", "generic", "lms"],
+      "featured": true
+    }
+  ]
+}
