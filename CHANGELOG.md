@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — Dataset Publishing Protocol 1.0
+
+- registry público e versionado em `public/datasets/registry.json`;
+- JSON Schema estrito para entradas de datasets publicados;
+- seletor de projetos na superfície pública;
+- abertura direta por query parameter `?dataset=<id>`;
+- validação do registry e do dataset antes da importação;
+- fallback seguro para o demo quando o registry não pode ser aberto;
+- protocolo universal de ingestão, lineage, fixture, QA, publicação e confirmação de deploy;
+- testes para resolução, caminhos seguros, IDs duplicados e dataset padrão.
+
 ## Unreleased — Data Contract 1.1
 
 - schema canônico elevado de 1.0 para 1.1;
