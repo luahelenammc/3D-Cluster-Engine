@@ -7,7 +7,11 @@
       "title": "LMS 3D Cluster Engine — Demo",
       "description": "Dataset de demonstração da engine genérica, com clusters, relações e eixos semânticos configuráveis.",
       "path": "demo/dataset.json",
-      "tags": ["demo", "generic", "lms"],
+      "tags": [
+        "demo",
+        "generic",
+        "lms"
+      ],
       "featured": true
     },
     {
@@ -15,7 +19,35 @@
       "title": "Projeto Política — mapa vivo",
       "description": "Mapa espacial sanitizado do projeto Política de Lua Helena Moon: governança, estratégia local, comunicação pública, ideologia, ensaio e história do Brasil.",
       "path": "politica/dataset.json",
-      "tags": ["politica", "limeira", "psol", "governance", "communication", "ideology", "history", "msl-4.1"],
+      "tags": [
+        "politica",
+        "limeira",
+        "psol",
+        "governance",
+        "communication",
+        "ideology",
+        "history",
+        "msl-4.1"
+      ],
+      "featured": true
+    },
+    {
+      "id": "acl",
+      "title": "As Crônicas de Líthia — organismo-multiverso",
+      "description": "Mapa espacial de ACL: fontes, cosmologia, magia, Lúmens, territórios, Feras, Sombras, instituições, conflitos e formas narrativas.",
+      "path": "acl/dataset.json",
+      "tags": [
+        "acl",
+        "lithia",
+        "worldbuilding",
+        "fantasy",
+        "multiverse",
+        "lumens",
+        "beasts",
+        "shadows",
+        "narrative",
+        "msl-4.1"
+      ],
       "featured": true
     }
   ]
