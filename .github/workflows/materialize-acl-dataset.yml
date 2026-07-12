@@ -1,0 +1,36 @@
+name: Materialize ACL dataset
+
+on:
+  push:
+    branches: [dataset/acl-v1]
+    paths:
+      - datasets-src/acl/**
+      - scripts/materialize-acl-dataset.mjs
+      - .github/workflows/materialize-acl-dataset.yml
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dataset/acl-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/materialize-acl-dataset.mjs
+      - name: Commit canonical dataset
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/datasets/acl/dataset.json
+          if git diff --cached --quiet; then
+            echo "Canonical dataset already materialized."
+            exit 0
+          fi
+          git commit -m "data: materialize ACL canonical dataset"
+          git push origin HEAD:dataset/acl-v1
