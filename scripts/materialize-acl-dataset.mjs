@@ -16,7 +16,7 @@ const linkFiles = files.filter((name) => /^links-\d+\.json$/.test(name)).sort();
 const nodes = (await Promise.all(nodeFiles.map(parse))).flat();
 const links = (await Promise.all(linkFiles.map(parse))).flat();
 
-if (nodes.length !== 70 || links.length !== 98) {
+if (nodes.length !== 70 || links.length !== 138) {
   throw new Error(`ACL dataset cardinality mismatch: ${nodes.length} nodes, ${links.length} links`);
 }
 
