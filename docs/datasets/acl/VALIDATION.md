@@ -4,7 +4,7 @@
 
 - **schemaVersion:** `1.1`
 - **fixture:** 5 clusters · 28 nós · 29 links · 14 famílias de relação
-- **dataset canônico:** 10 clusters · 70 nós · 98 links · 24 famílias de relação
+- **dataset canônico:** 10 clusters · 70 nós · 98 links · 23 famílias de relação
 - **IDs únicos:** aprovado
 - **clusters e endpoints:** aprovado
 - **nós isolados:** nenhum
@@ -14,7 +14,7 @@
 
 ## Higiene semântica
 
-Os verbos exatos das fontes permanecem em `link.metadata.relation`; o campo `type` usa 24 famílias estáveis para filtros e leitura comparável. Assim o dataset preserva nuance sem converter cada verbo em uma categoria improvisada.
+Os verbos exatos das fontes permanecem em `link.metadata.relation`; o campo `type` usa 23 famílias estáveis para filtros e leitura comparável. Assim o dataset preserva nuance sem converter cada verbo em uma categoria improvisada.
 
 Cada nó preserva `kind`, `summary`, `sourceFile`, `sourceSection`, `canonicity` e `epistemic`. O mapa distingue referência, provisório, canon provisório, fragmento multiversal, sandbox, legado e meta.
 
