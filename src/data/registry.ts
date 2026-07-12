@@ -88,12 +88,16 @@ async function applyPoliticaContentV2(
   rawDataset.clusters = manifest.clusters;
   rawDataset.nodes = nodeBatches.flat();
   rawDataset.links = linkBatches.flat();
-  rawDataset.layout.seed = "politica-content-v2-2026-07-12";
-  rawDataset.layout.axes.x.label = "Bacia substantiva";
-  rawDataset.layout.axes.x.span = 520;
-  rawDataset.layout.axes.y.label = "Da estrutura histórica à ação pública";
-  rawDataset.layout.axes.y.span = 380;
-  rawDataset.layout.axes.z.span = 320;
+
+  if (rawDataset.layout?.axes) {
+    rawDataset.layout.seed = "politica-content-v2-2026-07-12";
+    rawDataset.layout.axes.x.label = "Bacia substantiva";
+    rawDataset.layout.axes.x.span = 520;
+    rawDataset.layout.axes.y.label = "Da estrutura histórica à ação pública";
+    rawDataset.layout.axes.y.span = 380;
+    rawDataset.layout.axes.z.span = 320;
+  }
+
   rawDataset.extensions = {
     ...(rawDataset.extensions || {}),
     politica: {
