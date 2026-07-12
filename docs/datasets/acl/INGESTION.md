@@ -144,7 +144,7 @@ Não entram no dataset público:
 ## Publicação canônica
 
 - **caminho:** `public/datasets/acl/dataset.json`
-- **escala:** 70 nós, 98 links, 10 clusters e 24 famílias de relação
+- **escala:** 70 nós, 98 links, 10 clusters e 23 famílias de relação
 - **registry id:** `acl`
 - **registry path:** `acl/dataset.json`
 - **URL prevista:** `https://luahelenammc.github.io/3D-Cluster-Engine/?dataset=acl`
