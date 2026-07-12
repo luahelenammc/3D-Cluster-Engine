@@ -35,6 +35,11 @@ function baseWithSlash(baseUrl: string): string {
   return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 }
 
+function relationOverlayUrl(baseUrl: string, entry: DatasetRegistryEntry): string | null {
+  if (entry.id !== "acl") return null;
+  return `${baseWithSlash(baseUrl)}datasets/acl/relations.v1.1.json`;
+}
+
 export function parseDatasetRegistry(input: unknown): DatasetRegistry {
   if (!structural(input)) {
     const details = (structural.errors || [])
@@ -91,7 +96,16 @@ export async function fetchRegisteredDataset(
   const response = await fetcher(registeredDatasetUrl(baseUrl, entry.path));
   if (!response.ok) throw new Error(`Dataset ${entry.id} indisponível (${response.status}).`);
 
-  const result = validateDataset(await response.json());
+  const rawDataset = await response.json() as GraphDataset;
+  const overlayUrl = relationOverlayUrl(baseUrl, entry);
+  if (overlayUrl) {
+    const overlayResponse = await fetcher(overlayUrl);
+    if (!overlayResponse.ok) throw new Error(`Overlay relacional ${entry.id} indisponível (${overlayResponse.status}).`);
+    const overlayLinks = await overlayResponse.json() as GraphDataset["links"];
+    rawDataset.links = [...rawDataset.links, ...overlayLinks];
+  }
+
+  const result = validateDataset(rawDataset);
   if (!result.valid || !result.dataset) {
     const details = result.issues
       .filter((issue) => issue.severity === "error")
