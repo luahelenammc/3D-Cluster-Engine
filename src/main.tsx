@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import ClusterEngine from "./ui/ClusterEngine";
 import "../app/globals.css";
 import "../app/semantic-axes.css";
+import "../app/dataset-registry.css";
 
 const root = document.getElementById("root");
 
