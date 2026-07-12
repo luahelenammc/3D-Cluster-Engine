@@ -43,7 +43,7 @@ export function parseDatasetRegistry(input: unknown): DatasetRegistry {
     throw new Error(`Registry inválido. ${details}`);
   }
 
-  const registry = input as DatasetRegistry;
+  const registry = input as unknown as DatasetRegistry;
   const duplicateIds = duplicated(registry.datasets.map((entry) => entry.id));
   if (duplicateIds.length) {
     throw new Error(`Registry inválido. IDs de dataset duplicados: ${duplicateIds.join(", ")}.`);
