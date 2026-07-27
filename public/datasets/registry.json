@@ -15,6 +15,20 @@
       "featured": true
     },
     {
+      "id": "moon-projects-map",
+      "title": "Mapa de Projetos da Moon",
+      "description": "Mapa canônico de 31 projetos atuais, com categorias, prioridades operacionais, ordem declarada, cruzamentos e fronteiras de identidade.",
+      "path": "moon-projects-map/dataset.json",
+      "tags": [
+        "moon",
+        "projects",
+        "portfolio",
+        "msl-4.2",
+        "semantic-axes"
+      ],
+      "featured": true
+    },
+    {
       "id": "politica",
       "title": "Projeto Política — mapa vivo",
       "description": "Mapa espacial sanitizado do projeto Política de Lua Helena Moon: governança, estratégia local, comunicação pública, ideologia, ensaio e história do Brasil.",
