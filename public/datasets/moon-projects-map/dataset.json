@@ -1,0 +1,480 @@
+{
+  "schemaVersion": "1.1",
+  "meta": {
+    "id": "moon-projects-map",
+    "title": "Mapa de Projetos da Moon",
+    "description": "Portfólio canônico de 31 projetos atuais, organizado por categoria, prioridade operacional, ordem declarada e cruzamentos sem duplicação de identidade.",
+    "version": "1.0.0",
+    "source": "Local Moon Source — 6. Bridges, Transplants e Interoperabilidade, seção 7.0",
+    "attribution": [
+      "Lua Helena Moon",
+      "Local Moon Source"
+    ],
+    "tags": [
+      "moon",
+      "projects",
+      "portfolio",
+      "msl-4.2",
+      "semantic-axes",
+      "contract-1.1"
+    ]
+  },
+  "clusters": [
+    {
+      "id": "personal",
+      "label": "Pessoal",
+      "color": "#ff5da2",
+      "description": "Projetos ligados à identidade, afetos, saúde, finanças e espiritualidade pessoal."
+    },
+    {
+      "id": "professional",
+      "label": "Profissional",
+      "color": "#ff9f43",
+      "description": "Projetos de atuação institucional, hospitalar, política e desenvolvimento profissional."
+    },
+    {
+      "id": "ai",
+      "label": "IA e arquitetura",
+      "color": "#33d6ff",
+      "description": "Infraestruturas, linguagens, runtimes e sistemas de inteligência artificial."
+    },
+    {
+      "id": "community",
+      "label": "Comunidade",
+      "color": "#a874ff",
+      "description": "Projetos cuja função principal é criar ou sustentar espaços coletivos."
+    },
+    {
+      "id": "creativity",
+      "label": "Criatividade",
+      "color": "#6c7dff",
+      "description": "Escrita, worldbuilding, mídia, memória, imaginação e exploração cultural."
+    },
+    {
+      "id": "support",
+      "label": "Apoio",
+      "color": "#49e6a1",
+      "description": "Ferramentas, serviços e estruturas auxiliares que sustentam outros projetos."
+    }
+  ],
+  "nodes": [
+    {
+      "id": "category-personal",
+      "label": "Pessoal",
+      "cluster": "personal",
+      "value": 20,
+      "level": 3,
+      "tags": ["category-hub", "personal"],
+      "metadata": {"nodeType": "category-hub", "category": "personal", "priorityScore": 3, "ordinal": 16, "ordinalApplies": false, "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "category-professional",
+      "label": "Profissional",
+      "cluster": "professional",
+      "value": 20,
+      "level": 3,
+      "tags": ["category-hub", "professional"],
+      "metadata": {"nodeType": "category-hub", "category": "professional", "priorityScore": 3, "ordinal": 16, "ordinalApplies": false, "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "category-ai",
+      "label": "IA e arquitetura",
+      "cluster": "ai",
+      "value": 20,
+      "level": 3,
+      "tags": ["category-hub", "ai"],
+      "metadata": {"nodeType": "category-hub", "category": "ai", "priorityScore": 3, "ordinal": 16, "ordinalApplies": false, "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "category-community",
+      "label": "Comunidade",
+      "cluster": "community",
+      "value": 20,
+      "level": 3,
+      "tags": ["category-hub", "community"],
+      "metadata": {"nodeType": "category-hub", "category": "community", "priorityScore": 3, "ordinal": 16, "ordinalApplies": false, "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "category-creativity",
+      "label": "Criatividade",
+      "cluster": "creativity",
+      "value": 20,
+      "level": 3,
+      "tags": ["category-hub", "creativity"],
+      "metadata": {"nodeType": "category-hub", "category": "creativity", "priorityScore": 3, "ordinal": 16, "ordinalApplies": false, "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "category-support",
+      "label": "Apoio",
+      "cluster": "support",
+      "value": 20,
+      "level": 3,
+      "tags": ["category-hub", "support"],
+      "metadata": {"nodeType": "category-hub", "category": "support", "priorityScore": 3, "ordinal": 16, "ordinalApplies": false, "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "sobre-a-moon",
+      "label": "Sobre a Moon",
+      "cluster": "personal",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "personal"],
+      "metadata": {"nodeType": "project", "ordinal": 1, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "personal", "categories": ["personal"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "meu-macho",
+      "label": "Meu Macho",
+      "cluster": "personal",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "personal"],
+      "metadata": {"nodeType": "project", "ordinal": 2, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "personal", "categories": ["personal"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "tinder",
+      "label": "Tinder",
+      "cluster": "personal",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "personal"],
+      "metadata": {"nodeType": "project", "ordinal": 3, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "personal", "categories": ["personal"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "bubu-saude",
+      "label": "Bubu & Saúde",
+      "cluster": "personal",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "personal"],
+      "metadata": {"nodeType": "project", "ordinal": 4, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "personal", "categories": ["personal"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "financas-moon",
+      "label": "Finanças Moon",
+      "cluster": "personal",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "personal"],
+      "metadata": {"nodeType": "project", "ordinal": 5, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "personal", "categories": ["personal"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "neopaganismo",
+      "label": "Neopaganismo",
+      "cluster": "personal",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "personal"],
+      "metadata": {"nodeType": "project", "ordinal": 6, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "personal", "categories": ["personal"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "politica",
+      "label": "Política",
+      "cluster": "professional",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "professional"],
+      "metadata": {"nodeType": "project", "ordinal": 7, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "professional", "categories": ["professional"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "hospital-medical-profissional",
+      "label": "Hospital Medical (profissional)",
+      "cluster": "professional",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "professional"],
+      "metadata": {"nodeType": "project", "ordinal": 8, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "professional", "categories": ["professional"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "hospital-pessoal",
+      "label": "Hospital (pessoal)",
+      "cluster": "professional",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "professional"],
+      "metadata": {"nodeType": "project", "ordinal": 9, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "professional", "categories": ["professional"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "meu-diretor-corporativo",
+      "label": "Meu Diretor Corporativo",
+      "cluster": "professional",
+      "value": 7,
+      "level": 2,
+      "tags": ["project", "priority-b-c", "professional"],
+      "metadata": {"nodeType": "project", "ordinal": 10, "priorityClass": "B-C", "priorityScore": 2, "primaryCategory": "professional", "categories": ["professional"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "moon-professional-source",
+      "label": "Moon Professional Source",
+      "cluster": "professional",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "professional", "ai"],
+      "metadata": {"nodeType": "project", "ordinal": 11, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "professional", "categories": ["professional", "ai"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "carreira",
+      "label": "Carreira",
+      "cluster": "professional",
+      "value": 5,
+      "level": 1,
+      "tags": ["project", "priority-c", "professional"],
+      "metadata": {"nodeType": "project", "ordinal": 12, "priorityClass": "C", "priorityScore": 1, "primaryCategory": "professional", "categories": ["professional"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "local-moon-source",
+      "label": "Local Moon Source",
+      "cluster": "ai",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "ai"],
+      "metadata": {"nodeType": "project", "ordinal": 13, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "ai", "categories": ["ai"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "lunar-citadel",
+      "label": "Lunar Citadel",
+      "cluster": "ai",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "ai"],
+      "metadata": {"nodeType": "project", "ordinal": 14, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "ai", "categories": ["ai"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "moons-club",
+      "label": "Moon’s Club",
+      "cluster": "community",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "community"],
+      "metadata": {"nodeType": "project", "ordinal": 15, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "community", "categories": ["community"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "simbiosfera",
+      "label": "Simbiosfera",
+      "cluster": "ai",
+      "value": 7,
+      "level": 2,
+      "tags": ["project", "priority-b-c", "ai", "community"],
+      "metadata": {"nodeType": "project", "ordinal": 16, "priorityClass": "B-C", "priorityScore": 2, "primaryCategory": "ai", "categories": ["ai", "community"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "symbai",
+      "label": "SymbAI",
+      "cluster": "ai",
+      "value": 13,
+      "level": 4,
+      "tags": ["project", "priority-a-b", "ai", "community"],
+      "metadata": {"nodeType": "project", "ordinal": 17, "priorityClass": "A-B", "priorityScore": 4, "primaryCategory": "ai", "categories": ["ai", "community"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "cronicas-de-lithia",
+      "label": "As Crônicas de Líthia",
+      "cluster": "creativity",
+      "value": 13,
+      "level": 4,
+      "tags": ["project", "priority-a-b", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 18, "priorityClass": "A-B", "priorityScore": 4, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "escritos",
+      "label": "Escritos",
+      "cluster": "creativity",
+      "value": 13,
+      "level": 4,
+      "tags": ["project", "priority-a-b", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 19, "priorityClass": "A-B", "priorityScore": 4, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "blog-nostalgia",
+      "label": "Blog Nostalgia",
+      "cluster": "creativity",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 20, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "filmes-e-series",
+      "label": "Filmes e Séries",
+      "cluster": "creativity",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 21, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "ufologia",
+      "label": "Ufologia",
+      "cluster": "creativity",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 22, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1, "corpusSource": "Luminar IA (Ufologia) - Oficina da Hipótese e Método de Simulação (MSL 4.2)"}
+    },
+    {
+      "id": "citadela-das-moons",
+      "label": "Citadela das Moons",
+      "cluster": "creativity",
+      "value": 10,
+      "level": 3,
+      "tags": ["project", "priority-b", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 23, "priorityClass": "B", "priorityScore": 3, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1, "corpusSource": "Citadela das Moons"}
+    },
+    {
+      "id": "horta",
+      "label": "Horta",
+      "cluster": "creativity",
+      "value": 5,
+      "level": 1,
+      "tags": ["project", "priority-c", "creativity", "source-missing"],
+      "metadata": {"nodeType": "project", "ordinal": 19, "priorityClass": "C", "priorityScore": 1, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "not-found", "evidence": "declared", "confidence": 1, "corpusSource": "[arquivos não encontrados]", "knownOmission": "Nenhum corpus soberano do projeto foi localizado na busca de 2026-07-27."}
+    },
+    {
+      "id": "geografia-lunar",
+      "label": "Geografia Lunar",
+      "cluster": "creativity",
+      "value": 5,
+      "level": 1,
+      "tags": ["project", "priority-c", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 20, "priorityClass": "C", "priorityScore": 1, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "fluxo-de-consciencia",
+      "label": "Fluxo de Consciência",
+      "cluster": "creativity",
+      "value": 5,
+      "level": 1,
+      "tags": ["project", "priority-c", "creativity"],
+      "metadata": {"nodeType": "project", "ordinal": 30, "priorityClass": "C", "priorityScore": 1, "primaryCategory": "creativity", "categories": ["creativity"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "apoio-digital",
+      "label": "Apoio Digital",
+      "cluster": "support",
+      "value": 13,
+      "level": 4,
+      "tags": ["project", "priority-a-b", "support"],
+      "metadata": {"nodeType": "project", "ordinal": 26, "priorityClass": "A-B", "priorityScore": 4, "primaryCategory": "support", "categories": ["support"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1, "corpusSource": "Apoio Digital"}
+    },
+    {
+      "id": "arcabouco-juridico",
+      "label": "Arcabouço Jurídico",
+      "cluster": "support",
+      "value": 13,
+      "level": 4,
+      "tags": ["project", "priority-a-b", "support"],
+      "metadata": {"nodeType": "project", "ordinal": 27, "priorityClass": "A-B", "priorityScore": 4, "primaryCategory": "support", "categories": ["support"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "lojinha-da-moon",
+      "label": "Lojinha da Moon",
+      "cluster": "support",
+      "value": 5,
+      "level": 1,
+      "tags": ["project", "priority-c", "support"],
+      "metadata": {"nodeType": "project", "ordinal": 28, "priorityClass": "C", "priorityScore": 1, "primaryCategory": "support", "categories": ["support"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "photoshop",
+      "label": "Photoshop",
+      "cluster": "support",
+      "value": 16,
+      "level": 5,
+      "tags": ["project", "priority-a", "support"],
+      "metadata": {"nodeType": "project", "ordinal": 29, "priorityClass": "A", "priorityScore": 5, "primaryCategory": "support", "categories": ["support"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1}
+    },
+    {
+      "id": "deko",
+      "label": "Deko",
+      "cluster": "support",
+      "value": 5,
+      "level": 1,
+      "tags": ["project", "priority-c", "support"],
+      "metadata": {"nodeType": "project", "ordinal": 31, "priorityClass": "C", "priorityScore": 1, "primaryCategory": "support", "categories": ["support"], "sourceRegistry": "6. Bridges, Transplants e Interoperabilidade", "sourceSection": "7.0 Mapa canônico dos projetos atuais — 2026-07-27", "sourceStatus": "registered", "evidence": "declared", "confidence": 1, "corpusSource": "Deko"}
+    }
+  ],
+  "links": [
+    {"id":"membership-primary--personal--sobre-a-moon","source":"category-personal","target":"sobre-a-moon","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--personal--meu-macho","source":"category-personal","target":"meu-macho","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--personal--tinder","source":"category-personal","target":"tinder","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--personal--bubu-saude","source":"category-personal","target":"bubu-saude","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--personal--financas-moon","source":"category-personal","target":"financas-moon","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--personal--neopaganismo","source":"category-personal","target":"neopaganismo","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--professional--politica","source":"category-professional","target":"politica","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--professional--hospital-medical-profissional","source":"category-professional","target":"hospital-medical-profissional","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--professional--hospital-pessoal","source":"category-professional","target":"hospital-pessoal","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--professional--meu-diretor-corporativo","source":"category-professional","target":"meu-diretor-corporativo","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--professional--moon-professional-source","source":"category-professional","target":"moon-professional-source","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-secondary--ai--moon-professional-source","source":"category-ai","target":"moon-professional-source","type":"secondary-membership","weight":3,"directed":false,"metadata":{"relation":"also-belongs-to-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"generative","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--professional--carreira","source":"category-professional","target":"carreira","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--ai--local-moon-source","source":"category-ai","target":"local-moon-source","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--ai--lunar-citadel","source":"category-ai","target":"lunar-citadel","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--community--moons-club","source":"category-community","target":"moons-club","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--ai--simbiosfera","source":"category-ai","target":"simbiosfera","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-secondary--community--simbiosfera","source":"category-community","target":"simbiosfera","type":"secondary-membership","weight":3,"directed":false,"metadata":{"relation":"also-belongs-to-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"generative","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--ai--symbai","source":"category-ai","target":"symbai","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-secondary--community--symbai","source":"category-community","target":"symbai","type":"secondary-membership","weight":3,"directed":false,"metadata":{"relation":"also-belongs-to-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"generative","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--cronicas-de-lithia","source":"category-creativity","target":"cronicas-de-lithia","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--escritos","source":"category-creativity","target":"escritos","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--blog-nostalgia","source":"category-creativity","target":"blog-nostalgia","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--filmes-e-series","source":"category-creativity","target":"filmes-e-series","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--ufologia","source":"category-creativity","target":"ufologia","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--citadela-das-moons","source":"category-creativity","target":"citadela-das-moons","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--horta","source":"category-creativity","target":"horta","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--geografia-lunar","source":"category-creativity","target":"geografia-lunar","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--creativity--fluxo-de-consciencia","source":"category-creativity","target":"fluxo-de-consciencia","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--support--apoio-digital","source":"category-support","target":"apoio-digital","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--support--arcabouco-juridico","source":"category-support","target":"arcabouco-juridico","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--support--lojinha-da-moon","source":"category-support","target":"lojinha-da-moon","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--support--photoshop","source":"category-support","target":"photoshop","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"membership-primary--support--deko","source":"category-support","target":"deko","type":"primary-membership","weight":2,"directed":false,"metadata":{"relation":"belongs-to-primary-category","semanticLayer":"portfolio-taxonomy","evidence":"declared","confidence":1,"polarity":"neutral","temporality":"current-2026-07-27"}},
+    {"id":"boundary--local-moon-source--moon-professional-source","source":"local-moon-source","target":"moon-professional-source","type":"must-remain-distinct","weight":1,"directed":false,"metadata":{"relation":"must-remain-distinct","semanticLayer":"identity-boundary","evidence":"declared","confidence":1,"polarity":"protective","temporality":"structural"}},
+    {"id":"boundary--lunar-citadel--citadela-das-moons","source":"lunar-citadel","target":"citadela-das-moons","type":"must-remain-distinct","weight":1,"directed":false,"metadata":{"relation":"must-remain-distinct","semanticLayer":"identity-boundary","evidence":"declared","confidence":1,"polarity":"protective","temporality":"structural"}},
+    {"id":"boundary--hospital-medical-profissional--hospital-pessoal","source":"hospital-medical-profissional","target":"hospital-pessoal","type":"must-remain-distinct","weight":1,"directed":false,"metadata":{"relation":"must-remain-distinct","semanticLayer":"identity-boundary","evidence":"declared","confidence":1,"polarity":"protective","temporality":"structural"}},
+    {"id":"boundary--meu-macho--tinder","source":"meu-macho","target":"tinder","type":"must-remain-distinct","weight":1,"directed":false,"metadata":{"relation":"must-remain-distinct","semanticLayer":"identity-boundary","evidence":"declared","confidence":1,"polarity":"protective","temporality":"structural"}}
+  ],
+  "layout": {
+    "mode": "live",
+    "dimensions": 3,
+    "seed": "moon-projects-map-2026-07-27",
+    "clusterStrength": 0.055,
+    "chargeStrength": -105,
+    "linkDistance": 72,
+    "collisionPadding": 4,
+    "warmupTicks": 130,
+    "cooldownTicks": 650,
+    "axes": {
+      "enabled": true,
+      "x": {"enabled": true, "source": "cluster", "label": "Categoria principal", "strength": 0.38, "span": 420, "missing": "stableIndex"},
+      "y": {"enabled": true, "source": "field", "field": "metadata.priorityScore", "label": "Prioridade operacional", "min": 1, "max": 5, "strength": 0.36, "span": 300, "missing": "center"},
+      "z": {"enabled": true, "source": "field", "field": "metadata.ordinal", "label": "Ordem declarada", "min": 1, "max": 31, "strength": 0.24, "span": 320, "missing": "center"}
+    }
+  },
+  "visual": {
+    "background": "#070912",
+    "nodeSizeMin": 4,
+    "nodeSizeMax": 18,
+    "linkOpacity": 0.38,
+    "linkWidth": 0.9,
+    "showLabels": "always",
+    "showDirectionalParticles": false,
+    "dimUnrelatedOnSelection": true
+  },
+  "extensions": {
+    "localMoonSource": {
+      "mapDate": "2026-07-27",
+      "projectCount": 31,
+      "categoryHubCount": 6,
+      "prioritySemantics": {
+        "A": "frequente e crítico",
+        "A-B": "alta prioridade intermediária",
+        "B": "importante, porém menos frequente",
+        "B-C": "periférico intermediário",
+        "C": "frio; consultar apenas quando explicitamente ativado"
+      },
+      "ordinalRule": "Os números preservam a ordem declarada por Moon. Ordinais duplicados 19 e 20 são intencionais; lacunas 24 e 25 não implicam projetos ausentes.",
+      "crossCategoryRule": "Projetos multi-categoria permanecem um único nó e recebem vínculos secundários.",
+      "privacyRule": "O preset publica apenas nomes e classificação operacional; nenhum conteúdo privado dos projetos foi incorporado.",
+      "knownOmissions": ["Horta — [arquivos não encontrados]"]
+    }
+  }
+}
