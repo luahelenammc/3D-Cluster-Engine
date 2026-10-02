@@ -17,7 +17,7 @@
       "required": ["read", "diff", "stableIds", "anchors", "directWrite", "patchExport", "renameAwareness"],
       "properties": {
         "read": { "const": true }, "diff": { "const": true }, "stableIds": { "const": true }, "anchors": { "const": true },
-        "directWrite": { "const": false }, "patchExport": { "const": true }, "renameAwareness": { "const": true }
+        "directWrite": { "type": "boolean" }, "patchExport": { "const": true }, "renameAwareness": { "const": true }
       }
     },
     "sources": {

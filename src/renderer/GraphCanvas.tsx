@@ -7,6 +7,7 @@ import { clusterColor, escapeHtml } from "../core/colors";
 import { createSemanticAxesForce, resolveSemanticAxes } from "../core/spatial";
 import { projectRuntimeGraph } from "../core/view-projection";
 import { DEFAULT_LAYOUT, DEFAULT_VISUAL, type ClusterDefinition, type GraphViewMode, type LayoutConfig, type RuntimeGraph, type RuntimeNode, type VisualConfig } from "../core/types";
+import { activeNodeId, labelZoomForDistance, shouldOpenDetailsFromClick, visibleLabelIds, type LabelDensity, type LabelZoom } from "./interaction";
 
 export interface GraphCanvasApi {
   fit(): void;
@@ -23,8 +24,11 @@ interface Props {
   layout?: Partial<LayoutConfig>;
   visual?: Partial<VisualConfig>;
   selectedId: string | null;
+  inspectedId: string | null;
+  labelDensity: LabelDensity;
   viewMode: GraphViewMode;
   onSelect(id: string | null): void;
+  onInspect(id: string): void;
   onSimulation(state: "running" | "paused" | "settled"): void;
 }
 
@@ -71,13 +75,18 @@ function clusterForce(nodes: RuntimeNode[], clusters: ClusterDefinition[], stren
   return force;
 }
 
-export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanvas({ graph, clusters, layout: layoutInput, visual: visualInput, selectedId, viewMode, onSelect, onSimulation }, ref) {
+export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanvas({ graph, clusters, layout: layoutInput, visual: visualInput, selectedId, inspectedId, labelDensity, viewMode, onSelect, onInspect, onSimulation }, ref) {
   const hostRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [labelZoom, setLabelZoom] = useState<LabelZoom>("medium");
   const draggedIdRef = useRef<string | null>(null);
+  const lastDragAtRef = useRef(0);
+  const labelZoomListenerRef = useRef<(() => void) | null>(null);
+  const onSelectRef = useRef(onSelect);
+  const onInspectRef = useRef(onInspect);
   const dataRef = useRef(graph);
   const previousViewMode = useRef<GraphViewMode | null>(null);
   const cameras = useRef<Record<GraphViewMode, { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } } | null>>({ "3d": null, "2d": null });
@@ -86,6 +95,8 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
   const layout = { ...DEFAULT_LAYOUT, ...layoutInput, axes };
   const visual = { ...DEFAULT_VISUAL, ...visualInput };
   const renderGraph = useMemo<RuntimeGraph>(() => projectRuntimeGraph(graph, viewMode), [graph, viewMode]);
+  onSelectRef.current = onSelect;
+  onInspectRef.current = onInspect;
 
   useImperativeHandle(ref, () => ({
     fit: () => graphRef.current?.zoomToFit(650, 44),
@@ -119,19 +130,38 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
       setReady(true);
       instance.backgroundColor(visual.background).showNavInfo(false).nodeResolution(12).nodeRelSize(4).linkOpacity(visual.linkOpacity).nodeThreeObjectExtend(true).linkDirectionalParticleWidth(1.4).linkDirectionalParticleSpeed(0.006).onNodeHover((node: RuntimeNode | null) => {
         if (draggedIdRef.current) return;
+        hostRef.current?.classList.toggle("node-hovered", Boolean(node));
         setHoveredId(node?.id || null);
       }).onNodeDrag((node: RuntimeNode) => {
         const nodeId = node.id;
         if (draggedIdRef.current !== nodeId) {
           draggedIdRef.current = nodeId;
           setDraggedId(nodeId);
+          onSelectRef.current(nodeId);
         }
+        if (hostRef.current) hostRef.current.style.cursor = "grabbing";
         setHoveredId(nodeId);
       }).onNodeDragEnd(() => {
+        lastDragAtRef.current = Date.now();
         draggedIdRef.current = null;
         setDraggedId(null);
         setHoveredId(null);
-      }).onNodeClick((node: RuntimeNode) => onSelect(node.id)).onBackgroundClick(() => onSelect(null)).onEngineTick(() => onSimulation("running")).onEngineStop(() => onSimulation("settled"));
+        if (hostRef.current) hostRef.current.style.cursor = "";
+      }).onNodeClick((node: RuntimeNode, event: MouseEvent) => {
+        onSelectRef.current(node.id);
+        if (shouldOpenDetailsFromClick(event.detail, lastDragAtRef.current, Date.now())) onInspectRef.current(node.id);
+      }).onBackgroundClick(() => onSelectRef.current(null)).onEngineTick(() => onSimulation("running")).onEngineStop(() => onSimulation("settled"));
+      const updateLabelZoom = () => {
+        const camera = instance.camera?.();
+        const target = instance.controls?.()?.target;
+        if (!camera?.position || !target) return;
+        const distance = Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z);
+        setLabelZoom(labelZoomForDistance(distance));
+      };
+      const controls = instance.controls?.();
+      labelZoomListenerRef.current = updateLabelZoom;
+      controls?.addEventListener?.("change", updateLabelZoom);
+      updateLabelZoom();
       const resize = () => { if (hostRef.current) instance.width(hostRef.current.clientWidth).height(hostRef.current.clientHeight); };
       const observer = new ResizeObserver(resize);
       observer.observe(hostRef.current);
@@ -143,6 +173,8 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
       draggedIdRef.current = null;
       const host = hostElement as HTMLDivElement & { _observer?: ResizeObserver };
       host?._observer?.disconnect();
+      if (labelZoomListenerRef.current) graphRef.current?.controls?.()?.removeEventListener?.("change", labelZoomListenerRef.current);
+      labelZoomListenerRef.current = null;
       graphRef.current?._destructor?.();
       graphRef.current = null;
     };
@@ -190,13 +222,12 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     const instance = graphRef.current;
     if (!instance) return;
     dataRef.current = renderGraph;
-    const activeId = draggedId || selectedId || hoveredId;
+    const activeId = activeNodeId({ selectedNodeId: selectedId, inspectedNodeId: inspectedId, hoveredNodeId: hoveredId, draggedNodeId: draggedId });
     const activeNeighbors = new Set<string>();
     if (activeId) renderGraph.links.forEach((link) => { if (endpointId(link.source) === activeId) activeNeighbors.add(endpointId(link.target)); if (endpointId(link.target) === activeId) activeNeighbors.add(endpointId(link.source)); });
     const activeNode = renderGraph.nodes.find((node) => node.id === activeId);
     const activeColor = activeNode ? clusterColor(activeNode.cluster, clusterMap.get(activeNode.cluster)?.color) : "#ffffff";
-    const values = renderGraph.nodes.map((node) => Number(node.value || 0)).sort((a, b) => a - b);
-    const relevanceThreshold = values[Math.max(0, Math.floor(values.length * 0.7))] || 0;
+    const labels = visibleLabelIds({ nodes: renderGraph.nodes, links: renderGraph.links, selectedId, inspectedId, hoveredId, draggedId, density: labelDensity, zoom: labelZoom, viewMode });
     const isIncident = (link: any) => Boolean(activeId && (endpointId(link.source) === activeId || endpointId(link.target) === activeId));
     instance.nodeColor((node: RuntimeNode) => {
       if (activeId && visual.dimUnrelatedOnSelection && node.id !== activeId && !activeNeighbors.has(node.id)) return "#202633";
@@ -204,22 +235,25 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     }).nodeVal((node: RuntimeNode) => node.id === activeId ? Math.min(visual.nodeSizeMax + 6, (node.value || 4) + 8) : activeNeighbors.has(node.id) ? Math.min(visual.nodeSizeMax + 2, (node.value || 4) + 3) : Math.max(visual.nodeSizeMin, Math.min(visual.nodeSizeMax, node.value || 4))).nodeLabel((node: RuntimeNode) => `<div class="graph-tooltip"><b>${escapeHtml(node.label)}</b><span>${escapeHtml(clusterMap.get(node.cluster)?.label || node.cluster)}</span>${viewMode === "2d" ? `<span>Z · ${escapeHtml(axes.z.label)}: ${Number(node.semanticZ || 0).toFixed(1)}</span>` : ""}</div>`).nodeThreeObject((node: RuntimeNode) => {
       const central = node.id === activeId;
       const neighbor = activeNeighbors.has(node.id);
-      const showIdleRelevant = !activeId && visual.showLabels === "hover" && Number(node.value || 0) >= relevanceThreshold;
-      const showLabel = visual.showLabels === "always" || central || neighbor || showIdleRelevant;
+      const showLabel = labels.has(node.id) || node.id === selectedId || node.id === inspectedId || node.id === draggedId;
       const group = new Group();
+      const hitRadius = Math.max(8, Math.min(18, (Number(node.value || 4) + 4) * 1.65));
+      const hitTarget = new Mesh(new SphereGeometry(hitRadius, 10, 10), new MeshBasicMaterial({ transparent: true, opacity: 0, colorWrite: false, depthWrite: false }));
+      hitTarget.name = "lms3d-node-hit-target";
+      group.add(hitTarget);
       if (central) {
         const radius = Math.max(7, Math.min(17, Number(node.value || 4) + 6));
         const halo = new Mesh(new SphereGeometry(radius, 18, 18), new MeshBasicMaterial({ color: activeColor, transparent: true, opacity: 0.42, wireframe: true, depthWrite: false, blending: AdditiveBlending }));
         group.add(halo);
       }
-      if (showLabel && visual.showLabels !== "never") {
-        const label = new SpriteText(node.label);
-        label.color = central ? activeColor : "#ffffff";
-        label.textHeight = central ? 5.2 : neighbor ? 3.5 : 2.4;
-        label.backgroundColor = central ? "rgba(7,10,18,0.86)" : neighbor ? "rgba(7,10,18,0.68)" : "rgba(7,10,18,0.42)";
-        label.padding = central ? 2.2 : 1.2;
-        label.borderRadius = 3;
-        label.position.y = central ? 15 : neighbor ? 11 : 8;
+      if (showLabel && (visual.showLabels !== "never" || central)) {
+        const label = new SpriteText(node.label.length > 40 ? `${node.label.slice(0, 37)}…` : node.label);
+        label.color = central ? activeColor : "#f4f7fc";
+        label.textHeight = central ? 5 : neighbor ? 3.6 : 3;
+        label.backgroundColor = central ? "rgba(5,8,15,0.96)" : "rgba(5,8,15,0.88)";
+        label.padding = central ? 2.5 : 1.7;
+        label.borderRadius = 4;
+        label.position.y = central ? hitRadius + 4 : hitRadius + 2;
         group.add(label);
       }
       return group;
@@ -230,7 +264,7 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     linkForce?.distance?.(layout.linkDistance);
     if (layout.mode === "baked") instance.cooldownTicks(0); else instance.cooldownTicks(layout.cooldownTicks).warmupTicks(layout.warmupTicks).d3ReheatSimulation();
     // Configuration objects are intentionally collapsed to their public inputs.
-  }, [renderGraph, clusters, selectedId, hoveredId, draggedId, layoutInput, visualInput, ready, viewMode]);
+  }, [renderGraph, clusters, selectedId, inspectedId, hoveredId, draggedId, labelDensity, labelZoom, layoutInput, visualInput, ready, viewMode]);
 
   return <div ref={hostRef} className={`graph-canvas ${viewMode === "2d" ? "is-2d" : "is-3d"}`} role="img" aria-label={viewMode === "2d" ? "Mapa bidimensional em vista superior. A posição Z permanece semântica e pode ser consultada no inspector." : "Visualização tridimensional interativa do grafo. Use a busca e o painel textual para navegação acessível."} />;
 });

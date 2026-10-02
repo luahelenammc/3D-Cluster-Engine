@@ -43,7 +43,7 @@ export interface SourceManifest {
     diff: true;
     stableIds: true;
     anchors: true;
-    directWrite: false;
+    directWrite: boolean;
     patchExport: true;
     renameAwareness: true;
   };
@@ -158,6 +158,7 @@ export interface WritebackProposal {
   before: string;
   after: string;
   diff: string;
-  capability: "patch-export-only";
+  sourceFingerprint: string;
+  capability: "patch-export-only" | "direct-write-candidate";
   createdAt: string;
 }

@@ -6,18 +6,18 @@ Second Mind adds a source-aware workflow around the existing `GraphDataset` 1.1 
 
 | Layer | Authority and capability |
 |---|---|
-| Markdown source files | User-selected source authority; read-only in the app |
+| Markdown source files | User-selected source authority; read-only on intake, with a bounded direct-write path after explicit permission where supported |
 | `SourceManifest` | Local inventory, path IDs, fingerprints, extracted structure and diff |
 | `GraphDeltaProposal` | Candidate changes with source evidence; inert until reviewed |
 | `GraphStore` | Canonical graph state; accepted deltas become validated, undoable transactions |
 | AI bridge | Optional proposal/query service; it cannot write a graph or vault |
-| `WritebackProposal` | Exported patch for a person to inspect and apply elsewhere |
+| `WritebackProposal` | Before/after proposal for a managed source block; direct apply is permission-gated and fingerprint-checked, with patch export everywhere |
 
 The canonical data contract remains 1.1. Sidecar schemas are under `schema/` and each carries its own version.
 
 ## Markdown intake
 
-The user selects `.md` files or a folder with the browser file picker. Nothing is uploaded during intake. The parser enforces these caps before storing the manifest:
+The user selects `.md` files or opens a folder with the File System Access API in read mode. Nothing is uploaded during intake and write permission is not requested. The folder handle is kept in IndexedDB when the browser supports structured cloning; a file-picker import without a handle remains read-only. The parser enforces these caps before storing the manifest:
 
 - 2,000 files per import;
 - 5 MiB per file;
@@ -71,7 +71,13 @@ History is checkpoint-based, not a continuous event log. Checkpoints are created
 
 ## Governed writeback
 
-The current writeback path creates a JSON patch package for a Markdown-derived graph node. It shows the target path, anchor, managed block, before/after and a diff. The package declares `directWritePerformed: false` and requires a person to apply it outside the engine. Selecting files in the browser never grants file write permission.
+Writeback creates a proposal for one Markdown-derived node and an explicit `lms3d:node:<id>` managed block. The review shows the target, before/after and diff. In browsers with a selected directory handle, the user can choose **Aplicar à fonte**; only that user action calls `requestPermission({mode: "readwrite"})` on the target file handle. The engine reads the current file, compares its fingerprint with the proposal, writes the updated content only when they match, then re-reads and verifies the resulting text. An external change blocks the write and requires a fresh proposal. After success, the manifest is re-ingested and a semantic history checkpoint stores its new source fingerprint.
+
+The managed block is the only changed region; human prose around it is preserved. Browsers without a writable handle keep the JSON patch export. Export packages always state that no direct write was performed.
+
+## Interaction and labels
+
+A single click or tap selects a node and illuminates its neighborhood without opening details. Desktop double click and the compact **Detalhes** action deliberately open the inspector; on mobile it appears as a bottom sheet. Closing details preserves selection. Dragged nodes outrank inspected, selected, and hovered nodes. A deterministic label budget favors that active context and adapts to camera distance; the one control offers **Essenciais**, **Contexto**, and **Mais**. The active node name is retained in every mode, while 2D uses a larger map-like label budget.
 
 ## Verification
 
@@ -80,7 +86,7 @@ npm run lint
 npm test
 ```
 
-`npm test` runs Vitest regressions, companion bridge HTTP tests and a production TypeScript/Vite build. Unit coverage includes source limits/path traversal, frontmatter/headings/link resolution, rename ambiguity, evidence binding, proposal apply/undo, answer citation bounds, semantic history, 2D projection and writeback export-only behavior.
+`npm test` runs Vitest regressions, companion bridge HTTP tests and a production TypeScript/Vite build. Unit coverage includes source limits/path traversal, frontmatter/headings/link resolution, rename ambiguity, evidence binding, proposal apply/undo, answer citation bounds, semantic history, 2D projection, interaction-state transitions, managed-block writeback, permission denial, fingerprint conflict, and reread verification.
 
 ## Known limits
 
@@ -90,4 +96,4 @@ npm test
 - The local compiler only creates source-derived candidates from headings and explicit anchored links.
 - Browser storage is local to the profile and not encrypted or shared across devices.
 - The bridge's default loopback deployment is the supported low-setup path; a remotely reachable bridge needs TLS and trusted network/authentication controls.
-- Viewport emulation does not replace testing on physical mobile hardware and assistive technology.
+- Physical mobile WebGL testing is environment-dependent; record it separately from responsive and touch-event verification.
