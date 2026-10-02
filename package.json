@@ -1,6 +1,6 @@
 {
   "name": "lms-3d-cluster-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -9,8 +9,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run && npm run build",
+    "test": "vitest run && npm run test:companion && npm run build",
     "test:unit": "vitest run",
+    "test:companion": "node --test companion/server.test.mjs",
     "lint": "eslint src tests/unit"
   },
   "dependencies": {

@@ -43,6 +43,23 @@ Importações manuais continuam locais. Carregar um JSON pelo navegador não o a
 - layout live, hybrid e baked;
 - autosave local, undo/redo, temas e painéis responsivos.
 
+## Second Mind local
+
+A versão `0.2.0` acrescenta uma camada opcional para ler vaults Markdown no dispositivo, acompanhar mudanças nas fontes, revisar propostas `GraphDeltaProposal`, consultar evidências e comparar/restaurar snapshots semânticos. A visão 2D é uma projeção de runtime; o dataset continua no contrato canônico 1.1 e o eixo Z pode ser consultado no inspector.
+
+- mapa documental de arquivos e links ou geração de candidatos semânticos;
+- ingestão limitada a 2.000 arquivos Markdown, 5 MiB por arquivo e 25 MiB por seleção;
+- manifestação com fingerprints, âncoras, tags, links internos e diff que expõe renomeações ambíguas;
+- propostas exigem evidência presente na fonte atual e passam pela validação local antes de qualquer transação;
+- consultas lexicais montam pacotes pequenos com trechos e referências verificáveis;
+- histórico semântico local, com prévia antes da restauração;
+- writeback exporta uma proposta de patch; nunca grava diretamente nos arquivos selecionados;
+- ponte de IA é opcional. Sem provedor, use o compilador determinístico, exporte o pacote ou importe resposta estruturada.
+
+O app estático não contém chave de provedor. O servidor companheiro Node fica preso a `127.0.0.1` por padrão. Para uma interface de rede, exige token de acesso, CORS restrito e HTTPS na terminação remota.
+
+Veja [`docs/SECOND_MIND.md`](docs/SECOND_MIND.md) para fluxos, contratos, privacidade e limites operacionais.
+
 ## Quick start
 
 ```bash
@@ -159,6 +176,8 @@ Acima do envelope desktop, a validação emite warnings. Acima da fronteira de s
 - `src/data/graph-store.ts`: autoridade canônica e histórico;
 - `src/core/spatial.ts`: eixos, métricas derivadas e alvos semânticos;
 - `src/renderer`: renderer e forças 3D;
+- `src/second-mind`: ingestão local, evidências, propostas, histórico e export de patches;
+- `companion`: ponte Node opcional, com segredo do provedor no servidor;
 - `src/ui`: interface, shell de publicação e controller de interação;
 - `tests/fixtures`: corpos válidos, legados e deliberadamente quebrados.
 

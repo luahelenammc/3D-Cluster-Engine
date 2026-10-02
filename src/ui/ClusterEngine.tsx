@@ -1,13 +1,16 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { clusterColor } from "../core/colors";
-import { resolveSemanticAxes } from "../core/spatial";
-import type { AxisDimension, GraphDataset, GraphLink, GraphNode, RuntimeGraph, SemanticAxisConfig, SemanticAxisSource, ValidationIssue } from "../core/types";
+import { computeSemanticTargets, resolveSemanticAxes } from "../core/spatial";
+import type { AxisDimension, GraphDataset, GraphLink, GraphNode, GraphViewMode, RuntimeGraph, SemanticAxisConfig, SemanticAxisSource, ValidationIssue } from "../core/types";
 import { importFiles, downloadDataset } from "../data/adapters";
 import { GraphStore } from "../data/graph-store";
 import { validateDataset } from "../data/validate";
-import { GraphCanvas, type GraphCanvasApi } from "../renderer/GraphCanvas";
+import type { GraphCanvasApi } from "../renderer/GraphCanvas";
+
+const GraphCanvas = lazy(() => import("../renderer/GraphCanvas").then((module) => ({ default: module.GraphCanvas })));
+const SecondMindPanel = lazy(() => import("./SecondMindPanel"));
 
 type Toast = { type: "ok" | "error" | "info"; message: string } | null;
 
@@ -42,6 +45,8 @@ export default function ClusterEngine() {
   const [showAddLink, setShowAddLink] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showJsonEditor, setShowJsonEditor] = useState(false);
+  const [showSecondMind, setShowSecondMind] = useState(false);
+  const [viewMode, setViewMode] = useState<GraphViewMode>(() => typeof window !== "undefined" && localStorage.getItem("lms3d.view-mode.v1") === "2d" ? "2d" : "3d");
   const fileRef = useRef<HTMLInputElement>(null);
   const graphApi = useRef<GraphCanvasApi>(null);
 
@@ -70,6 +75,7 @@ export default function ClusterEngine() {
   }, [store]);
 
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("lms3d.theme", theme); }, [theme]);
+  useEffect(() => { localStorage.setItem("lms3d.view-mode.v1", viewMode); }, [viewMode]);
   useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(null), 4000); return () => clearTimeout(timer); }, [toast]);
   useEffect(() => {
     const media = window.matchMedia("(max-width: 760px)");
@@ -82,9 +88,11 @@ export default function ClusterEngine() {
   }, []);
 
   const clusters = dataset?.clusters || [];
-  const axes = resolveSemanticAxes(dataset?.layout);
+  const axes = useMemo(() => resolveSemanticAxes(dataset?.layout), [dataset?.layout]);
+  const semanticTargets = useMemo(() => dataset ? computeSemanticTargets(dataset.nodes, dataset.links, dataset.clusters, axes) : new Map(), [dataset, axes]);
   const linkTypes = useMemo(() => [...new Set((dataset?.links || []).map((link) => link.type || "related"))], [dataset]);
   const selectedNode = dataset?.nodes.find((node) => node.id === selectedId) || null;
+  const selectedSemanticZ = selectedNode ? semanticTargets.get(selectedNode.id)?.z : undefined;
   const searchResults = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle || !dataset) return [];
@@ -114,6 +122,21 @@ export default function ClusterEngine() {
     if (!isMobileViewport()) return;
     setLeftOpen(false);
     setRightOpen(Boolean(id));
+  }
+
+  function loadSecondMindDataset(next: GraphDataset) {
+    store?.commitDataset(next);
+    setSelectedId(null);
+    setVisibleClusters(new Set(next.clusters.map((cluster) => cluster.id)));
+    setVisibleTypes(new Set(next.links.map((link) => link.type || "related")));
+    window.dispatchEvent(new CustomEvent("lms3d:local-dataset"));
+  }
+
+  function highlightFromSecondMind(id: string) {
+    setSelectedId(id);
+    setRightOpen(true);
+    setShowSecondMind(false);
+    graphApi.current?.focus(id);
   }
 
   function toggleLeftPanel() {
@@ -172,6 +195,8 @@ export default function ClusterEngine() {
         </div>
         <div className="toolbar">
           <button className="icon-button" onClick={toggleLeftPanel} aria-label="Alternar painel esquerdo">☰</button>
+          <div className="view-mode-switch" role="group" aria-label="Modo de visualização"><button type="button" aria-pressed={viewMode === "3d"} className={viewMode === "3d" ? "active" : ""} onClick={() => setViewMode("3d")}>3D</button><button type="button" aria-pressed={viewMode === "2d"} className={viewMode === "2d" ? "active" : ""} onClick={() => setViewMode("2d")}>2D</button></div>
+          <button className="second-mind-launch" onClick={() => setShowSecondMind(true)}>Second Mind</button>
           <button onClick={() => fileRef.current?.click()}>Importar</button>
           <input ref={fileRef} className="sr-only" type="file" multiple accept=".json,.csv" onChange={(event) => handleFiles(Array.from(event.target.files || []))} />
           <button onClick={() => downloadDataset(dataset)}>Exportar</button>
@@ -202,7 +227,8 @@ export default function ClusterEngine() {
             </section>;
           })}
         </div>}
-        <div className="button-row"><button onClick={() => { graphApi.current?.pause(); store.applyPositions(graphApi.current?.getPositions() || {}); setToast({ type: "ok", message: "Layout gravado no dataset." }); }}>Bake layout</button><button onClick={() => { store.clearPositions(); graphApi.current?.reheat(); }}>Limpar bake</button></div>
+        <div className="button-row"><button disabled={viewMode === "2d"} title={viewMode === "2d" ? "Bake indisponível em 2D para preservar o eixo Z canônico." : undefined} onClick={() => { graphApi.current?.pause(); store.applyPositions(graphApi.current?.getPositions() || {}); setToast({ type: "ok", message: "Layout gravado no dataset." }); }}>Bake layout</button><button onClick={() => { store.clearPositions(); graphApi.current?.reheat(); }}>Limpar bake</button></div>
+        {viewMode === "2d" && <p className="settings-note">O modo 2D não grava posições: o eixo Z permanece intacto no dataset.</p>}
         <button onClick={() => { setShowSettings(false); setShowJsonEditor(true); }}>Editar JSON canônico</button>
         <button onClick={restoreAutosave}>Restaurar autosave local</button>
         <button className="danger-quiet" onClick={() => { localStorage.removeItem("lms3d.autosave"); setToast({ type: "info", message: "Dados locais removidos." }); }}>Limpar dados locais</button>
@@ -220,16 +246,17 @@ export default function ClusterEngine() {
         </aside>}
 
         <section className="canvas-stage">
-          <GraphCanvas ref={graphApi} graph={visibleGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} onSelect={selectNode} onSimulation={setSimulation} />
-          <div className="axes-caption" aria-hidden="true">{axes.enabled ? AXIS_DIMENSIONS.map((dimension) => <span key={dimension}><b>{dimension.toUpperCase()}</b>{axes[dimension].label}</span>) : <span><b>·</b>layout livre</span>}</div>
+          <Suspense fallback={<div className="graph-canvas-loading" role="img" aria-label="Carregando visualização do grafo…" />}><GraphCanvas ref={graphApi} graph={visibleGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} viewMode={viewMode} onSelect={selectNode} onSimulation={setSimulation} /></Suspense>
+          <div className="axes-caption" aria-hidden="true">{viewMode === "2d" ? <><span><b>X</b>{axes.x.label}</span><span><b>Y</b>{axes.y.label}</span><span><b>Z</b>oculto no plano · preservado no inspector</span></> : axes.enabled ? AXIS_DIMENSIONS.map((dimension) => <span key={dimension}><b>{dimension.toUpperCase()}</b>{axes[dimension].label}</span>) : <span><b>·</b>layout livre</span>}</div>
           <button className="inspector-toggle" onClick={toggleRightPanel} aria-label="Alternar inspector">{rightOpen ? "›" : "‹"}</button>
         </section>
 
-        {rightOpen && <Inspector dataset={dataset} node={selectedNode} store={store} onSelect={selectNode} onFocus={(id) => graphApi.current?.focus(id)} onToast={setToast} />}
+        {rightOpen && <Inspector dataset={dataset} node={selectedNode} semanticZ={selectedSemanticZ} viewMode={viewMode} store={store} onSelect={selectNode} onFocus={(id) => graphApi.current?.focus(id)} onToast={setToast} />}
       </section>
 
-      <footer className="statusbar"><span><i className={`status-light ${simulation}`} /> física: {simulation}</span><span>{visibleGraph.nodes.length}/{dataset.nodes.length} nós visíveis</span><span>{visibleGraph.links.length}/{dataset.links.length} links visíveis</span><span>layout: {dataset.layout?.mode || "live"}</span><span>{axes.enabled ? "eixos: semânticos" : "eixos: livres"}</span><span>{issues.length ? `${issues.length} aviso(s)` : "dados válidos"}</span><span className="status-spacer" /><span>arraste · órbita · scroll zoom</span></footer>
+      <footer className="statusbar"><span><i className={`status-light ${simulation}`} /> física: {simulation}</span><span>{visibleGraph.nodes.length}/{dataset.nodes.length} nós visíveis</span><span>{visibleGraph.links.length}/{dataset.links.length} links visíveis</span><span>layout: {dataset.layout?.mode || "live"}</span><span>{axes.enabled ? "eixos: semânticos" : "eixos: livres"}</span><span>{issues.length ? `${issues.length} aviso(s)` : "dados válidos"}</span><span className="status-spacer" /><span>{viewMode === "2d" ? "plano XY · pan · zoom · arraste · Z no inspector" : "arraste · órbita · scroll zoom"}</span></footer>
       {toast && <div className={`toast ${toast.type}`}>{toast.message}</div>}
+      {showSecondMind && <Suspense fallback={<div className="second-mind-backdrop"><div className="second-mind-panel" role="status">Carregando Second Mind…</div></div>}><SecondMindPanel dataset={dataset} store={store} selectedNode={selectedNode} onClose={() => setShowSecondMind(false)} onLoadDataset={loadSecondMindDataset} onHighlight={highlightFromSecondMind} onToast={setToast} /></Suspense>}
       {showAddNode && <AddNodeDialog dataset={dataset} onClose={() => setShowAddNode(false)} onAdd={(node) => { try { store.addNode(node); setShowAddNode(false); setSelectedId(node.id); setToast({ type: "ok", message: "Nó criado." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao criar nó." }); } }} />}
       {showAddLink && <AddLinkDialog dataset={dataset} onClose={() => setShowAddLink(false)} onAdd={(link) => { try { store.addLink(link); setShowAddLink(false); setToast({ type: "ok", message: "Link criado." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao criar link." }); } }} />}
       {showJsonEditor && <JsonEditorDialog dataset={dataset} onClose={() => setShowJsonEditor(false)} onApply={(next) => { try { const result = validateDataset(next); if (!result.valid) throw new Error(result.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("\n")); store.replace(next, true); setVisibleClusters(new Set((next.clusters || []).map((cluster) => cluster.id))); setVisibleTypes(new Set(next.links.map((link) => link.type || "related"))); setSelectedId(null); setShowJsonEditor(false); setToast({ type: "ok", message: "Dataset canônico substituído." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "JSON inválido." }); } }} />}
@@ -237,11 +264,11 @@ export default function ClusterEngine() {
   );
 }
 
-function Inspector({ dataset, node, store, onSelect, onFocus, onToast }: { dataset: GraphDataset; node: GraphNode | null; store: GraphStore; onSelect(id: string | null): void; onFocus(id: string): void; onToast(toast: Toast): void }) {
+function Inspector({ dataset, node, store, semanticZ, viewMode, onSelect, onFocus, onToast }: { dataset: GraphDataset; node: GraphNode | null; semanticZ?: number; viewMode: GraphViewMode; store: GraphStore; onSelect(id: string | null): void; onFocus(id: string): void; onToast(toast: Toast): void }) {
   if (!node) return <aside className="sidebar inspector"><p className="eyebrow">INSPECTOR</p><div className="empty-inspector"><span>✦</span><h2>Escolha um nó</h2><p>Clique numa esfera ou use a busca. O mapa continua sendo dado: tudo o que você editar pode ser exportado.</p><dl><div><dt>Schema</dt><dd>{dataset.schemaVersion}</dd></div><div><dt>Versão</dt><dd>{dataset.meta.version}</dd></div><div><dt>Fonte</dt><dd>{dataset.meta.source || "local"}</dd></div></dl></div></aside>;
   const incoming = dataset.links.filter((link) => link.target === node.id);
   const outgoing = dataset.links.filter((link) => link.source === node.id);
-  return <aside className="sidebar inspector"><div className="inspector-head"><p className="eyebrow">NÓ SELECIONADO</p><button onClick={() => onSelect(null)}>×</button></div><NodeEditor key={node.id} node={node} dataset={dataset} onSave={(patch) => { try { store.updateNode(node.id, patch); onToast({ type: "ok", message: "Nó atualizado." }); } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Edição inválida." }); } }} /><div className="inspector-buttons"><button onClick={() => onFocus(node.id)}>Focar câmera</button><button onClick={() => store.updateNode(node.id, { pinned: !node.pinned })}>{node.pinned ? "Desafixar" : "Fixar"}</button><button className="danger-quiet" onClick={() => { if (confirm(`Excluir ${node.label} e seus links?`)) { store.removeNode(node.id); onSelect(null); } }}>Excluir</button></div><div className="relations"><h3>Relações</h3><p>{incoming.length} entradas · {outgoing.length} saídas</p>{[...incoming, ...outgoing].slice(0, 8).map((link, index) => { const other = link.source === node.id ? link.target : link.source; return <button key={link.id || index} onClick={() => { onSelect(other); onFocus(other); }}><span>{link.source === node.id ? "→" : "←"}</span><strong>{dataset.nodes.find((item) => item.id === other)?.label || other}</strong><small>{link.type || "related"}</small></button>; })}</div></aside>;
+  return <aside className="sidebar inspector"><div className="inspector-head"><p className="eyebrow">NÓ SELECIONADO</p><button onClick={() => onSelect(null)}>×</button></div>{viewMode === "2d" && <div className="semantic-z-card"><span>Z · {dataset.layout?.axes?.z?.label || "Centralidade relacional"}</span><strong>{Number.isFinite(semanticZ) ? Number(semanticZ).toFixed(2) : "indisponível"}</strong><small>O valor continua semântico; o plano 2D não o usa como profundidade visível.</small></div>}<NodeEditor key={node.id} node={node} dataset={dataset} onSave={(patch) => { try { store.updateNode(node.id, patch); onToast({ type: "ok", message: "Nó atualizado." }); } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Edição inválida." }); } }} /><div className="inspector-buttons"><button onClick={() => onFocus(node.id)}>Focar câmera</button><button onClick={() => store.updateNode(node.id, { pinned: !node.pinned })}>{node.pinned ? "Desafixar" : "Fixar"}</button><button className="danger-quiet" onClick={() => { if (confirm(`Excluir ${node.label} e seus links?`)) { store.removeNode(node.id); onSelect(null); } }}>Excluir</button></div><div className="relations"><h3>Relações</h3><p>{incoming.length} entradas · {outgoing.length} saídas</p>{[...incoming, ...outgoing].slice(0, 8).map((link, index) => { const other = link.source === node.id ? link.target : link.source; return <button key={link.id || index} onClick={() => { onSelect(other); onFocus(other); }}><span>{link.source === node.id ? "→" : "←"}</span><strong>{dataset.nodes.find((item) => item.id === other)?.label || other}</strong><small>{link.type || "related"}</small></button>; })}</div></aside>;
 }
 
 function NodeEditor({ node, dataset, onSave }: { node: GraphNode; dataset: GraphDataset; onSave(patch: Partial<GraphNode>): void }) {

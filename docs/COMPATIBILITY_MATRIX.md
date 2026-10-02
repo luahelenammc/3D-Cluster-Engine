@@ -10,6 +10,20 @@
 | Canonical JSON >1.1 | No | — | — | Fails explicitly until a migration exists. |
 | Arbitrary graph JSON | No | — | — | Requires a named adapter; shape guessing is deliberately rejected. |
 
+## Second Mind sidecars
+
+These are independent versioned contracts. They do not change the canonical dataset schema or its `1.1` version.
+
+| Surface | Read/write | Contract | Guarantees and limits |
+|---|---|---|---|
+| User-selected Markdown files/folders | Read locally | `SourceManifest` 1.0 | Stable local vault ID, path-derived source IDs, SHA-256 where Web Crypto is available, headings, lightweight frontmatter, tags, internal links and bounded source diffs. Rename is inferred only when content fingerprints are unique; duplicates stay ambiguous. |
+| Graph delta | Import/review/apply | `GraphDeltaProposal` 1.0 | Operations require a current source fingerprint, path, anchor when supplied, and quote found in that source. Import itself never mutates the graph. |
+| Query packet/answer | Export/import or optional bridge | `QueryEvidencePacket` / `QueryAnswer` 1.0 | Capped local excerpts and node/source references; imported and provider answers may cite only packet members. |
+| Semantic graph history | Local save/restore | `HistorySnapshot` 1.0 | Local browser storage, bounded to 50 snapshots per dataset; runtime positions are excluded from semantic diffs, semantic axis mapping is included. |
+| Markdown writeback | Export only | `WritebackProposal` 1.0 | Human-applied patch package. Direct vault writes are not supported. |
+
+The Markdown adapter is a lightweight parser rather than a full YAML/Obsidian interpreter. It reads only files explicitly selected in the browser and accepts `.md` files within the declared size limits.
+
 ## CSV columns
 
 ### `nodes.csv`

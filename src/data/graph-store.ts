@@ -39,6 +39,7 @@ export class GraphStore {
     this.dirty = dirty;
     this.emit();
   }
+  commitDataset(dataset: GraphDataset) { this.commit(clone(assertValidDataset(dataset))); }
   getRuntimeSnapshot(): RuntimeGraph {
     const seed = this.dataset.layout?.seed || DEFAULT_LAYOUT.seed;
     const axes = resolveSemanticAxes(this.dataset.layout);
