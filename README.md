@@ -45,7 +45,7 @@ Importações manuais continuam locais. Carregar um JSON pelo navegador não o a
 
 ## Second Mind local
 
-A versão `0.2.0` acrescenta uma camada opcional para ler vaults Markdown no dispositivo, acompanhar mudanças nas fontes, revisar propostas `GraphDeltaProposal`, consultar evidências e comparar/restaurar snapshots semânticos. A visão 2D é uma projeção de runtime; o dataset continua no contrato canônico 1.1 e o eixo Z pode ser consultado no inspector.
+A versão `0.2.1` mantém a camada local de fontes Markdown, propostas `GraphDeltaProposal`, consultas com evidência e histórico semântico, e separa seleção leve de inspeção deliberada. A visão 2D continua sendo projeção de runtime; `GraphDataset` permanece no contrato canônico 1.1.
 
 - mapa documental de arquivos e links ou geração de candidatos semânticos;
 - ingestão limitada a 2.000 arquivos Markdown, 5 MiB por arquivo e 25 MiB por seleção;
@@ -53,7 +53,10 @@ A versão `0.2.0` acrescenta uma camada opcional para ler vaults Markdown no dis
 - propostas exigem evidência presente na fonte atual e passam pela validação local antes de qualquer transação;
 - consultas lexicais montam pacotes pequenos com trechos e referências verificáveis;
 - histórico semântico local, com prévia antes da restauração;
-- writeback exporta uma proposta de patch; nunca grava diretamente nos arquivos selecionados;
+- escrita direta de Markdown está disponível em navegadores com File System Access API, por handle escolhido pelo usuário, permissão solicitada somente ao aplicar, verificação de fingerprint e releitura do arquivo;
+- a escrita atualiza apenas um bloco `lms3d:node` gerenciado; em navegadores sem handle gravável, a proposta exportável continua disponível;
+- um clique/tap seleciona e ilumina a vizinhança; duplo clique no desktop ou `Detalhes` abre o inspector sem apagar a seleção ao fechar;
+- rótulos usam prioridade, orçamento por zoom e os modos `Essenciais`, `Contexto` e `Mais`; 2D e 3D preservam o mesmo estado de seleção;
 - ponte de IA é opcional. Sem provedor, use o compilador determinístico, exporte o pacote ou importe resposta estruturada.
 
 O app estático não contém chave de provedor. O servidor companheiro Node fica preso a `127.0.0.1` por padrão. Para uma interface de rede, exige token de acesso, CORS restrito e HTTPS na terminação remota.

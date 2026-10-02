@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 — 2026-10-02
+
+- separação entre seleção leve e abertura deliberada do inspector, com resumo do nó e drawer móvel que preserva a seleção ao fechar;
+- arrasto seleciona o nó, rejeita clique pós-drag como duplo clique e amplia o alvo de raycast sem inflar a esfera visível;
+- rótulos por prioridade, orçamento adaptativo por zoom e controle único `Essenciais / Contexto / Mais`, com orçamento ampliado em 2D;
+- writeback Markdown direto por handle do File System Access, permissão solicitada somente na ação Aplicar, bloqueio de conflito por fingerprint e releitura de confirmação;
+- exportação de patch mantida como fallback, histórico registra o fingerprint de fonte atualizado e o Second Mind recolhe configuração avançada de IA;
+- GraphDataset 1.1 permanece compatível; acrescentados testes de transições de interação, conflito, permissão e verificação de escrita.
+
 ## Unreleased — Dataset Publishing Protocol 1.0
 
 - registry público e versionado em `public/datasets/registry.json`;

@@ -29,11 +29,17 @@
 .sm-metrics span { display: flex; align-items: center; gap: 7px; min-height: 48px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-2); color: var(--text-2); font-size: 10px; }
 .sm-metrics b { color: var(--text-1); font-size: 15px; }
 .sm-diff-strip, .sm-evidence-summary, .sm-proposal-summary, .sm-restore-preview { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.sm-capability { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-2); }
+.sm-capability b { color: var(--text-1); font-size: 10px; }
+.sm-capability span { color: var(--text-2); font-size: 9px; line-height: 1.45; }
+.sm-capability.write-granted { border-color: rgba(62,214,178,.35); }
+.sm-advanced-disclosure { display: grid; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-2); }
+.sm-advanced-disclosure > summary { min-height: 28px; color: var(--text-2); font-size: 10px; font-weight: 700; cursor: pointer; }
 .sm-diff-strip { grid-template-columns: auto 1fr; align-items: center; gap: 10px; }
 .sm-diff-strip b, .sm-evidence-summary b, .sm-proposal-summary b, .sm-restore-preview > b { font-size: 11px; }
 .sm-diff-strip span, .sm-evidence-summary small, .sm-proposal-summary span, .sm-restore-preview p { color: var(--text-2); font-size: 10px; }
 .sm-field { display: grid; gap: 6px; color: var(--text-2); font-size: 10px; font-weight: 700; }
-.sm-field input, .sm-field select, .sm-field textarea, .sm-import-proposal textarea, .sm-import-answer textarea { width: 100%; padding: 10px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-0); color: var(--text-1); font-size: 11px; font-weight: 450; line-height: 1.5; resize: vertical; }
+.sm-field input, .sm-field select, .sm-field textarea, .sm-import-proposal textarea, .sm-import-answer textarea { width: 100%; min-height: 40px; padding: 10px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-0); color: var(--text-1); font-size: 11px; font-weight: 450; line-height: 1.5; resize: vertical; }
 .sm-health { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-2); font-size: 10px; }
 .sm-health.ready { border-color: rgba(62,214,178,.35); color: var(--ok); }
 .sm-health.unavailable { border-color: rgba(255,114,141,.3); }

@@ -5,10 +5,11 @@ import { requestGraphProposal, getBridgeHealth, normalizeBridgeUrl, requestQuery
 import { diffDatasets, createHistorySnapshot } from "../second-mind/history";
 import { buildSourceMapDataset, compileMarkdownDeterministically, validateProposal, applyGraphDelta } from "../second-mind/proposals";
 import { buildEvidencePacket, parseImportedAnswer, queryFallbackMessage, validateQueryAnswer } from "../second-mind/query";
-import { listHistorySnapshots, loadVaultManifest, saveHistorySnapshot, saveVaultManifest } from "../second-mind/persistence";
-import { buildWritebackExport, createWritebackProposal } from "../second-mind/writeback";
+import { listHistorySnapshots, loadVaultAccessHandle, loadVaultManifest, saveHistorySnapshot, saveVaultAccessHandle, saveVaultManifest } from "../second-mind/persistence";
+import { applyWritebackSafely, buildWritebackExport, createWritebackProposal } from "../second-mind/writeback";
 import type { DatasetDiff, GraphDeltaOperation, GraphDeltaProposal, HistorySnapshot, QueryAnswer, QueryEvidencePacket, SourceDiff, SourceManifest, WritebackProposal } from "../second-mind/types";
-import { buildSourceManifest } from "../second-mind/markdown";
+import { buildSourceManifest, type MarkdownFileInput } from "../second-mind/markdown";
+import { createFileSystemWritebackAdapter, directoryPickerAvailable, getVaultFileHandle, pickVaultDirectory, readMarkdownDirectory, type VaultDirectoryHandle, type VaultFileHandle } from "../second-mind/file-system";
 
 type PanelTab = "sources" | "changes" | "ask" | "history" | "writeback";
 type Toast = { type: "ok" | "error" | "info"; message: string } | null;
@@ -170,17 +171,35 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
   const [selectedSnapshot, setSelectedSnapshot] = useState("");
   const [restorePreview, setRestorePreview] = useState<DatasetDiff | null>(null);
   const [writeback, setWriteback] = useState<WritebackProposal | null>(null);
+  const [writebackHandle, setWritebackHandle] = useState<VaultFileHandle | null>(null);
+  const [vaultDirectory, setVaultDirectory] = useState<VaultDirectoryHandle | null>(null);
+  const [vaultAccess, setVaultAccess] = useState<"unsupported" | "no-handle" | "read-only" | "write-granted">(() => directoryPickerAvailable() ? "no-handle" : "unsupported");
+  const [applyingWriteback, setApplyingWriteback] = useState(false);
   const [sending, setSending] = useState(false);
   const filesInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const previousManifest = useRef<SourceManifest | undefined>(undefined);
+  const fileHandles = useRef(new Map<string, VaultFileHandle>());
 
   useEffect(() => {
     folderInput.current?.setAttribute("webkitdirectory", "");
     folderInput.current?.setAttribute("directory", "");
     const stored = localStorage.getItem("lms3d.ai-bridge-url.v1");
     if (stored) setBridgeUrl(stored);
-    void loadVaultManifest().then((value) => { if (value) { setManifest(value); previousManifest.current = value; } }).catch(() => undefined);
+    void Promise.all([loadVaultManifest(), loadVaultAccessHandle()]).then(async ([value, handle]) => {
+      let writable = false;
+      if (handle) {
+        setVaultDirectory(handle);
+        setVaultAccess("read-only");
+        try { writable = await handle.queryPermission({ mode: "readwrite" }) === "granted"; } catch { writable = false; }
+        setVaultAccess(writable ? "write-granted" : "read-only");
+      }
+      if (value) {
+        const current = { ...value, capabilities: { ...value.capabilities, directWrite: writable } };
+        setManifest(current); previousManifest.current = current;
+        await saveVaultManifest(current);
+      }
+    }).catch(() => undefined);
   }, []);
 
   useEffect(() => { if (bridgeUrl.trim()) localStorage.setItem("lms3d.ai-bridge-url.v1", bridgeUrl.trim()); else localStorage.removeItem("lms3d.ai-bridge-url.v1"); }, [bridgeUrl]);
@@ -196,16 +215,56 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
   const aiSources = aiManifest?.sources || [];
   const aiGraph = useMemo(() => manifest ? boundedGraph(dataset, manifest, aiSourceIds) : null, [dataset, manifest, aiSourceIds]);
 
-  async function importVault(files: File[]) {
+  async function refreshDirectoryManifest(root: VaultDirectoryHandle, prior = previousManifest.current) {
+    const handles = new Map<string, VaultFileHandle>();
+    const files = await readMarkdownDirectory(root, handles);
+    const result = await buildSourceManifest(files, prior);
+    const permission = await root.queryPermission({ mode: "readwrite" }).catch(() => "denied" as const);
+    const nextManifest = { ...result.manifest, capabilities: { ...result.manifest.capabilities, directWrite: permission === "granted" } };
+    fileHandles.current = handles;
+    await saveVaultManifest(nextManifest);
+    previousManifest.current = nextManifest;
+    setManifest(nextManifest); setSourceDiff(result.diff);
+    setVaultAccess(permission === "granted" ? "write-granted" : "read-only");
+    return { manifest: nextManifest, diff: result.diff };
+  }
+
+  async function importVault(files: MarkdownFileInput[], root?: VaultDirectoryHandle, handles = new Map<string, VaultFileHandle>()) {
     setLoadingVault(true);
     try {
       const result = await buildSourceManifest(files, previousManifest.current);
-      await saveVaultManifest(result.manifest);
-      previousManifest.current = result.manifest;
-      setManifest(result.manifest); setSourceDiff(result.diff); setProposal(null); setDecisionLog([]); setAiConsent(false);
+      let writable = false;
+      if (root) {
+        setVaultDirectory(root);
+        fileHandles.current = handles;
+        try { writable = await root.queryPermission({ mode: "readwrite" }) === "granted"; } catch { writable = false; }
+        await saveVaultAccessHandle(root);
+      } else {
+        setVaultDirectory(null); setWritebackHandle(null); fileHandles.current = new Map();
+        setVaultAccess(directoryPickerAvailable() ? "no-handle" : "unsupported");
+        await saveVaultAccessHandle(null);
+      }
+      if (root) setVaultAccess(writable ? "write-granted" : "read-only");
+      const nextManifest = { ...result.manifest, capabilities: { ...result.manifest.capabilities, directWrite: writable } };
+      await saveVaultManifest(nextManifest);
+      previousManifest.current = nextManifest;
+      setManifest(nextManifest); setSourceDiff(result.diff); setProposal(null); setDecisionLog([]); setAiConsent(false); setWriteback(null);
       onToast({ type: "ok", message: `Vault lido localmente: ${result.manifest.sources.length} notas · ${result.diff.added} novas · ${result.diff.modified} alteradas · ${result.diff.removed} removidas.` });
     } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao ler o vault." }); }
     finally { setLoadingVault(false); }
+  }
+
+  async function openVaultDirectory() {
+    try {
+      const handle = await pickVaultDirectory();
+      const handles = new Map<string, VaultFileHandle>();
+      const files = await readMarkdownDirectory(handle, handles);
+      if (!files.length) throw new Error("A pasta selecionada não contém notas Markdown.");
+      await importVault(files, handle, handles);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      onToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao abrir o vault." });
+    }
   }
 
   function generateLocalProposal() {
@@ -324,10 +383,64 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
     } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao restaurar snapshot." }); }
   }
 
-  function createWriteback() {
+  async function createWriteback() {
     if (!selectedNode || !manifest) return onToast({ type: "info", message: "Selecione um nó com proveniência Markdown e importe o vault atual." });
-    try { setWriteback(createWritebackProposal(selectedNode, manifest)); }
+    try {
+      const proposal = createWritebackProposal(selectedNode, manifest, Boolean(vaultDirectory));
+      const handle = vaultDirectory ? fileHandles.current.get(proposal.targetPath) || await getVaultFileHandle(vaultDirectory, proposal.targetPath) : null;
+      const writableHandle = handle && typeof handle.requestPermission === "function" && typeof handle.createWritable === "function" ? handle : null;
+      setWritebackHandle(writableHandle);
+      setWriteback({ ...proposal, capability: writableHandle ? "direct-write-candidate" : "patch-export-only" });
+    }
     catch (error) { onToast({ type: "info", message: error instanceof Error ? error.message : "Não há caminho seguro para writeback." }); }
+  }
+
+  async function applyWriteback() {
+    if (!writeback || !writebackHandle || writeback.capability !== "direct-write-candidate") return;
+    setApplyingWriteback(true);
+    try {
+      const result = await applyWritebackSafely(writeback, createFileSystemWritebackAdapter(writebackHandle, () => {
+        setVaultAccess("write-granted");
+        if (manifest) {
+          const authorized = { ...manifest, capabilities: { ...manifest.capabilities, directWrite: true } };
+          setManifest(authorized); previousManifest.current = authorized; void saveVaultManifest(authorized);
+        }
+      }));
+      if (result.status === "permission-denied") {
+        setVaultAccess("read-only");
+        if (manifest) {
+          const next = { ...manifest, capabilities: { ...manifest.capabilities, directWrite: false } };
+          setManifest(next); previousManifest.current = next; await saveVaultManifest(next);
+        }
+        onToast({ type: "info", message: "A escrita foi negada. Nada mudou na fonte; o pacote de patch continua disponível." });
+        return;
+      }
+      if (result.status === "conflict") {
+        if (vaultDirectory) await refreshDirectoryManifest(vaultDirectory);
+        setWriteback(null); setWritebackHandle(null);
+        onToast({ type: "error", message: "A fonte mudou desde a proposta. A sobrescrita foi bloqueada; gere uma nova proposta a partir do manifesto atualizado." });
+        return;
+      }
+      if (result.status === "verification-failed") {
+        if (vaultDirectory) await refreshDirectoryManifest(vaultDirectory);
+        setWriteback(null); setWritebackHandle(null);
+        onToast({ type: "error", message: "A releitura não correspondeu aos bytes propostos. A proposta foi descartada; revise a nota atual antes de tentar novamente." });
+        return;
+      }
+      setVaultAccess("write-granted");
+      const refreshed = vaultDirectory ? await refreshDirectoryManifest(vaultDirectory) : null;
+      const sourceManifestFingerprint = refreshed?.manifest.fingerprint || manifest?.fingerprint;
+      if (refreshed) {
+        const authorized = { ...refreshed.manifest, capabilities: { ...refreshed.manifest.capabilities, directWrite: true } };
+        setManifest(authorized); previousManifest.current = authorized; await saveVaultManifest(authorized);
+      }
+      await saveHistorySnapshot(createHistorySnapshot(dataset, { sourceManifestFingerprint, reason: `direct-writeback:${writeback.nodeId}` }));
+      setHistory(await listHistorySnapshots(dataset.meta.id));
+      setWriteback(null); setWritebackHandle(null);
+      onToast({ type: "ok", message: `Bloco gerenciado de ${writeback.targetPath} gravado e relido. O histórico registra o fingerprint atualizado da fonte.` });
+    } catch (error) {
+      onToast({ type: "error", message: error instanceof Error ? error.message : "A escrita direta falhou antes da confirmação." });
+    } finally { setApplyingWriteback(false); }
   }
 
   const restoreSnapshotData = history.find((item) => item.snapshotId === selectedSnapshot);
@@ -345,9 +458,10 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
       <div className="second-mind-body">
         {tab === "sources" && <section className="second-mind-section" role="tabpanel">
           <div className="sm-section-heading"><div><h3>Entrada Markdown / Obsidian</h3><p>Leitura local, manifestação com proveniência e diff. Arquivos e pastas não viram ontologia por acidente.</p></div></div>
-          <div className="sm-actions"><button onClick={() => filesInput.current?.click()} disabled={loadingVault}>Selecionar notas</button><button onClick={() => folderInput.current?.click()} disabled={loadingVault}>Selecionar pasta</button><button className="quiet" onClick={() => void generateLocalProposal()} disabled={!manifest}>Gerar candidatos locais</button></div>
+          <div className="sm-actions"><button onClick={() => filesInput.current?.click()} disabled={loadingVault}>Selecionar notas</button><button onClick={() => directoryPickerAvailable() ? void openVaultDirectory() : folderInput.current?.click()} disabled={loadingVault}>{directoryPickerAvailable() ? "Abrir vault" : "Selecionar pasta"}</button><button className="quiet" onClick={() => void generateLocalProposal()} disabled={!manifest}>Gerar candidatos locais</button></div>
           <input ref={filesInput} className="sr-only" type="file" accept=".md,text/markdown" multiple onChange={(event: ChangeEvent<HTMLInputElement>) => { void importVault(Array.from(event.currentTarget.files || [])); event.currentTarget.value = ""; }} />
           <input ref={folderInput} className="sr-only" type="file" accept=".md,text/markdown" multiple onChange={(event: ChangeEvent<HTMLInputElement>) => { void importVault(Array.from(event.currentTarget.files || [])); event.currentTarget.value = ""; }} />
+          <div className={`sm-capability ${vaultAccess}`} role="status"><b>{vaultAccess === "write-granted" ? "Leitura + escrita autorizada" : vaultAccess === "unsupported" ? "Somente leitura · navegador sem acesso direto a pastas" : vaultAccess === "no-handle" ? "Somente leitura · abra um vault para habilitar escrita explícita" : "Somente leitura · a escrita só é solicitada ao aplicar"}</b><span>Permissão de escrita não é pedida durante a leitura.</span></div>
           <p className="sm-local-note">{loadingVault ? "Lendo arquivos neste dispositivo…" : "Limites: 2.000 notas, 5 MiB por nota, 25 MiB por importação. Nenhum upload ocorre nesta etapa."}</p>
           {manifest ? <>
             <div className="sm-metrics"><span><b>{manifest.sources.length}</b> notas</span><span><b>{manifest.sources.reduce((sum, source) => sum + source.headings.length, 0)}</b> títulos</span><span><b>{manifest.sources.reduce((sum, source) => sum + source.links.length, 0)}</b> links</span><span><b>{manifest.sources.reduce((sum, source) => sum + source.tags.length, 0)}</b> tags</span></div>
@@ -355,7 +469,7 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
             <label className="sm-field">Modo de leitura<select value={mode} onChange={(event) => setMode(event.target.value as "source-map" | "semantic-compile")}><option value="semantic-compile">Conteúdo como proveniência · recomendado</option><option value="source-map">Mapa documental de arquivos e links</option></select></label>
             <p className="sm-explanation">{mode === "source-map" ? "Cria um dataset documental explícito a partir de arquivos e links internos. Ele substitui o grafo aberto em uma única transação desfazível." : "Títulos e relações Markdown viram apenas candidatos com evidência; nada entra no grafo sem revisão."}</p>
             {mode === "source-map" && <button className="primary-button" onClick={() => { const mapped = buildSourceMapDataset(manifest); onLoadDataset(mapped); setTab("history"); void saveHistorySnapshot(createHistorySnapshot(mapped, { sourceManifestFingerprint: manifest.fingerprint, reason: "source-map compiled locally" })).then(() => listHistorySnapshots(mapped.meta.id).then(setHistory)); onToast({ type: "ok", message: "Mapa de fontes criado localmente. A operação pode ser desfeita." }); }}>Criar mapa de fontes</button>}
-            {mode === "semantic-compile" && <div className="sm-ai-box">
+            {mode === "semantic-compile" && <details className="sm-advanced-disclosure"><summary>Assistência por IA · opcional</summary><div className="sm-ai-box">
               <label className="sm-field">Ponte opcional<input type="url" value={bridgeUrl} onChange={(event) => { setBridgeUrl(event.target.value); setAiConsent(false); setBridgeHealth({ state: "unknown", message: "Verifique a URL antes de enviar." }); }} placeholder="https://sua-ponte.example" /></label>
               <label className="sm-field">Token de acesso da ponte<input type="password" autoComplete="off" value={bridgeAccessToken} onChange={(event) => { setBridgeAccessToken(event.target.value); setAiConsent(false); }} placeholder="Opcional · exigido se a ponte estiver protegida" /><small>Fica apenas na memória desta aba. A chave do provedor permanece no servidor.</small></label>
               <div className={`sm-health ${bridgeHealth.state}`}>{bridgeHealth.message}<button type="button" className="quiet" onClick={() => void checkBridge()}>Verificar</button></div>
@@ -363,7 +477,7 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
               <label className="sm-consent"><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} disabled={!aiSources.length} />Se eu escolher “Compilar com IA”, autorizo enviar à ponte configurada somente as fontes e o recorte de grafo exibidos acima. A resposta volta como proposta revisável.</label>
               <button className="sm-secondary-action" onClick={() => void compileWithBridge()} disabled={!manifest || !bridgeUrl.trim() || !aiConsent || sending}>{sending ? "Compilando…" : "Compilar com IA"}</button>
               <small>Sem ponte ativa, “Gerar candidatos locais” usa apenas títulos e links explícitos, sem modelo e sem rede.</small>
-            </div>}
+            </div></details>}
             <div className="sm-source-list"><h4>Notas no manifesto local</h4>{manifest.sources.slice(0, 30).map((source) => <details key={source.sourceId}><summary>{source.path} <small>{source.headings.length} títulos · {source.links.length} links · {source.tags.length} tags</small></summary><p>{source.tags.length ? `Tags: ${source.tags.join(", ")}` : "Sem tags"}</p>{source.headings.map((heading) => <span className="sm-heading-chip" key={`${source.sourceId}#${heading.anchor}`}>{"#".repeat(heading.depth)} {heading.text}</span>)}{source.links.filter((link) => link.resolution !== "resolved").map((link, index) => <small className="sm-warning" key={`${link.target}:${index}`}>{link.resolution === "ambiguous" ? "Ambíguo" : "Sem destino"}: {link.target}{link.candidates?.length ? ` · ${link.candidates.join(", ")}` : ""}</small>)}</details>)}{manifest.sources.length > 30 && <p>Exibindo as primeiras 30 notas; o manifesto completo segue localmente.</p>}</div>
           </> : <div className="sm-empty"><b>Nenhuma fonte ativa</b><p>Selecione arquivos Markdown ou uma pasta. A leitura não pede login nem transmite conteúdo.</p></div>}
         </section>}
@@ -389,9 +503,9 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
           <div className="sm-section-heading"><div><h3>Consulta com evidência</h3><p>Busca lexical e vizinhança local montam um pacote pequeno. Sem provedor, exporte-o ou importe resposta externa estruturada.</p></div></div>
           <label className="sm-field">Pergunta<textarea rows={3} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="O que as fontes dizem sobre…" /></label>
           <div className="sm-actions"><button className="primary-button" onClick={buildPacket}>Montar pacote local</button><button className="quiet" disabled={!packet} onClick={() => packet && downloadJson("evidence-packet.json", packet)}>Exportar pacote</button></div>
-          <label className="sm-field">Ponte opcional<input type="url" value={bridgeUrl} onChange={(event) => { setBridgeUrl(event.target.value); setAiConsent(false); setBridgeHealth({ state: "unknown", message: "Verifique a URL antes de enviar." }); }} placeholder="https://sua-ponte.example" /></label>
-          <label className="sm-field">Token de acesso da ponte<input type="password" autoComplete="off" value={bridgeAccessToken} onChange={(event) => { setBridgeAccessToken(event.target.value); setAiConsent(false); }} placeholder="Opcional · exigido se a ponte estiver protegida" /><small>Fica apenas na memória desta aba. A chave do provedor permanece no servidor.</small></label>
-          <div className={`sm-health ${bridgeHealth.state}`}>{bridgeHealth.message}<button type="button" className="quiet" onClick={() => void checkBridge()}>Verificar</button></div>
+          <details className="sm-advanced-disclosure"><summary>Configurar uma ponte de IA · opcional</summary><label className="sm-field">URL da ponte<input type="url" value={bridgeUrl} onChange={(event) => { setBridgeUrl(event.target.value); setAiConsent(false); setBridgeHealth({ state: "unknown", message: "Verifique a URL antes de enviar." }); }} placeholder="https://sua-ponte.example" /></label>
+          <label className="sm-field">Token de acesso<input type="password" autoComplete="off" value={bridgeAccessToken} onChange={(event) => { setBridgeAccessToken(event.target.value); setAiConsent(false); }} placeholder="Opcional · exigido se a ponte estiver protegida" /><small>Fica apenas na memória desta aba. A chave do provedor permanece no servidor.</small></label>
+          <div className={`sm-health ${bridgeHealth.state}`}>{bridgeHealth.message}<button type="button" className="quiet" onClick={() => void checkBridge()}>Verificar</button></div></details>
           {packet && <>
             <p className="sm-fallback">{queryFallbackMessage(packet)}</p>
             <div className="sm-evidence-summary"><b>{packet.nodes.length} nós · {packet.sources.length} trechos</b><small>Dataset: {packet.datasetId}</small></div>
@@ -414,10 +528,15 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
         </section>}
 
         {tab === "writeback" && <section className="second-mind-section" role="tabpanel">
-          <div className="sm-section-heading"><div><h3>Retorno governado à fonte</h3><p>Adapter atual: leitura, diff, IDs estáveis, âncoras e export de patch. Escrita direta indisponível; arquivo original nunca é alterado aqui.</p></div></div>
-          <div className="sm-evidence-summary"><b>{selectedNode ? selectedNode.label : "Nenhum nó selecionado"}</b><small>{selectedNode ? `ID ${selectedNode.id}` : "Selecione um nó com proveniência Markdown no inspector."}</small></div>
-          <button className="primary-button" onClick={createWriteback} disabled={!selectedNode || !manifest}>Criar proposta de writeback</button>
-          {writeback && <article className="sm-writeback"><h4>{writeback.targetPath}{writeback.anchor ? ` · #${writeback.anchor}` : " · fim do arquivo"}</h4><p>Alvo: nó {writeback.nodeId}. Estratégia delimitada por marcador gerenciado; a prosa original não é reescrita.</p><div className="sm-before-after"><section><b>Antes</b><pre>{writeback.before || "(nenhum bloco gerenciado)"}</pre></section><section><b>Depois</b><pre>{writeback.after}</pre></section></div><pre className="sm-diff">{writeback.diff}</pre><button onClick={() => downloadJson(`writeback-${writeback.nodeId}.json`, buildWritebackExport(writeback))}>Exportar pacote de patch</button></article>}
+          <div className="sm-section-heading"><div><h3>Retorno governado à fonte</h3><p>O app atualiza apenas o bloco gerenciado desta nota. O restante do texto permanece intacto.</p></div></div>
+          <div className="sm-capability" role="status"><b>{vaultAccess === "write-granted" ? "Leitura + escrita autorizada" : vaultAccess === "unsupported" ? "Somente leitura · acesso direto indisponível" : vaultAccess === "no-handle" ? "Somente leitura · abra um vault para habilitar Aplicar" : "Somente leitura · Aplicar pedirá autorização do navegador"}</b><span>{vaultDirectory ? "A permissão de escrita só será solicitada quando você aplicar uma proposta." : "Sem uma pasta autorizada, use a exportação de patch."}</span></div>
+          <div className="sm-evidence-summary"><b>{selectedNode ? selectedNode.label : "Nenhum nó selecionado"}</b><small>{selectedNode ? `ID ${selectedNode.id}` : "Selecione um nó com proveniência Markdown."}</small></div>
+          <button className="primary-button" onClick={() => void createWriteback()} disabled={!selectedNode || !manifest || loadingVault}>Preparar alteração</button>
+          {writeback && <article className="sm-writeback"><h4>{writeback.targetPath}{writeback.anchor ? ` · #${writeback.anchor}` : " · fim da nota"}</h4><p>Prévia do bloco gerenciado do nó {writeback.nodeId}. O texto fora deste bloco será preservado.</p><div className="sm-before-after"><section><b>Antes</b><pre>{writeback.before || "(nenhum bloco gerenciado)"}</pre></section><section><b>Depois</b><pre>{writeback.after}</pre></section></div><pre className="sm-diff">{writeback.diff}</pre>
+            {writeback.capability === "direct-write-candidate" && writebackHandle ? <button className="primary-button" onClick={() => void applyWriteback()} disabled={applyingWriteback}>{applyingWriteback ? "Verificando e aplicando…" : "Aplicar à fonte"}</button> : <p className="sm-fallback">Escrita direta indisponível nesta sessão; o pacote exportável continua pronto.</p>}
+            <button onClick={() => downloadJson(`writeback-${writeback.nodeId}.json`, buildWritebackExport(writeback))}>Exportar pacote de patch</button>
+            <details className="sm-disclosure"><summary>Fingerprint e capacidade técnica</summary><p>Fingerprint de origem: <code>{writeback.sourceFingerprint}</code></p><p>Estado do adapter: {writeback.capability === "direct-write-candidate" ? "handle disponível; permissão será solicitada ao aplicar" : "export de patch"}</p></details>
+          </article>}
         </section>}
       </div>
       <footer className="second-mind-footer"><span>Fonte = autoridade · grafo = representação · IA = proposta · Moon = autorização final</span><button onClick={onClose}>Fechar</button></footer>

@@ -76,6 +76,10 @@
   pointer-events: none;
 }
 
+.axes-caption.has-selection {
+  bottom: 76px;
+}
+
 .axes-caption span {
   display: inline-flex;
   align-items: center;
@@ -107,6 +111,10 @@
     bottom: 14px;
     left: 12px;
     gap: 4px;
+  }
+
+  .axes-caption.has-selection {
+    bottom: calc(70px + env(safe-area-inset-bottom));
   }
 
   .axes-caption span {

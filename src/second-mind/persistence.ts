@@ -1,4 +1,5 @@
 import type { HistorySnapshot, SourceManifest } from "./types";
+import type { VaultDirectoryHandle } from "./file-system";
 
 const DATABASE = "lms3d-second-mind-v1";
 const VAULT_STORE = "vaults";
@@ -59,6 +60,28 @@ export async function saveVaultManifest(manifest: SourceManifest): Promise<void>
 
 export async function loadVaultManifest(): Promise<SourceManifest | undefined> {
   return readRecord<SourceManifest>(VAULT_STORE, "current-vault");
+}
+
+export async function saveVaultAccessHandle(handle: VaultDirectoryHandle | null): Promise<boolean> {
+  const db = await openDatabase();
+  if (!db) return false;
+  const transaction = db.transaction(VAULT_STORE, "readwrite");
+  transaction.objectStore(VAULT_STORE).put(handle ? { key: "vault-access-handle", value: handle } : { key: "vault-access-handle", value: null });
+  return new Promise((resolve) => {
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = () => resolve(false);
+    transaction.onabort = () => resolve(false);
+  });
+}
+
+export async function loadVaultAccessHandle(): Promise<VaultDirectoryHandle | undefined> {
+  const db = await openDatabase();
+  if (!db) return undefined;
+  return new Promise((resolve) => {
+    const request = db.transaction(VAULT_STORE, "readonly").objectStore(VAULT_STORE).get("vault-access-handle");
+    request.onsuccess = () => resolve(request.result?.value as VaultDirectoryHandle | undefined);
+    request.onerror = () => resolve(undefined);
+  });
 }
 
 export async function saveHistorySnapshot(snapshot: HistorySnapshot, maxSnapshots = 50): Promise<void> {
