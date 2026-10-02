@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luahelenammc.github.io/3D-Cluster-Engine/schema/graph-delta-proposal-1.0.schema.json",
+  "title": "Graph Delta Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proposalVersion", "proposalId", "datasetId", "createdAt", "compiler", "summary", "operations"],
+  "properties": {
+    "proposalVersion": { "const": "1.0" },
+    "proposalId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "datasetId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "compiler": { "enum": ["deterministic-markdown", "ai-bridge", "external-import"] },
+    "summary": { "type": "string", "maxLength": 3000 },
+    "operations": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/operation" } }
+  },
+  "$defs": {
+    "evidence": { "type": "object", "additionalProperties": false, "required": ["sourceId", "path", "fingerprint", "quote", "derivation"], "properties": { "sourceId": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1, "maxLength": 1024 }, "fingerprint": { "type": "string", "minLength": 8, "maxLength": 80 }, "anchor": { "type": "string", "maxLength": 200 }, "quote": { "type": "string", "maxLength": 1000 }, "derivation": { "enum": ["explicit", "derived", "inferred"] } } },
+    "base": { "type": "object", "required": ["operationId", "confidence", "epistemicStatus", "evidence", "rationale"], "properties": { "operationId": { "type": "string", "minLength": 1, "maxLength": 200 }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 }, "epistemicStatus": { "enum": ["explicit", "derived", "inferred"] }, "evidence": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/evidence" } }, "rationale": { "type": "string", "minLength": 1, "maxLength": 2000 } } },
+    "operation": {
+      "oneOf": [
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "node"], "properties": { "kind": { "const": "add-node" }, "node": { "type": "object", "required": ["id", "label", "cluster"], "properties": { "id": { "type": "string" }, "label": { "type": "string" }, "cluster": { "type": "string" } }, "additionalProperties": true } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "nodeId", "patch"], "properties": { "kind": { "const": "update-node" }, "nodeId": { "type": "string" }, "patch": { "type": "object" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "nodeId"], "properties": { "kind": { "enum": ["retire-node", "delete-node"] }, "nodeId": { "type": "string" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "link"], "properties": { "kind": { "const": "add-link" }, "link": { "type": "object", "required": ["id", "source", "target"], "properties": { "id": { "type": "string" }, "source": { "type": "string" }, "target": { "type": "string" } }, "additionalProperties": true } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "linkId", "patch"], "properties": { "kind": { "type": "string", "const": "update-link" }, "linkId": { "type": "string" }, "patch": { "type": "object" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "linkId"], "properties": { "kind": { "enum": ["retire-link", "delete-link"] }, "linkId": { "type": "string" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "cluster"], "properties": { "kind": { "const": "add-cluster" }, "cluster": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string" }, "label": { "type": "string" } }, "additionalProperties": true } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "clusterId", "patch"], "properties": { "kind": { "type": "string", "const": "update-cluster" }, "clusterId": { "type": "string" }, "patch": { "type": "object" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "required": ["kind", "clusterId"], "properties": { "kind": { "type": "string", "const": "delete-cluster" }, "clusterId": { "type": "string" }, "reassignTo": { "type": "string" } } }] }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

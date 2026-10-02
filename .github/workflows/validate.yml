@@ -20,6 +20,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run test:unit
+      - run: npm run test:companion
       - name: Build and capture diagnostics
         id: build
         shell: bash

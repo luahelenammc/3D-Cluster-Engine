@@ -1,5 +1,6 @@
 export type NodeId = string;
 export type ClusterId = string;
+export type GraphViewMode = "3d" | "2d";
 
 export interface GraphPosition {
   x: number;
@@ -130,6 +131,7 @@ export interface GraphDataset {
 
 export interface RuntimeNode extends GraphNode {
   semanticTarget?: GraphPosition;
+  semanticZ?: number;
   x?: number;
   y?: number;
   z?: number;

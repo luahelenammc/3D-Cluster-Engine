@@ -35,6 +35,8 @@ A canonical dataset requires:
 
 Optional roots are `layout`, `visual` and `extensions`. Unknown top-level fields are rejected. Project-specific payload belongs in namespaced `extensions` or entity `metadata`, not beside the canonical roots.
 
+The Second Mind layer uses separate sidecar contracts for source manifests, `GraphDeltaProposal`, query packets/answers, history snapshots and writeback packages. These are not canonical dataset roots; the canonical dataset remains 1.1. Accepted source references live under namespaced `metadata.secondMind`.
+
 ## Identity laws
 
 - Cluster IDs are unique and stable.

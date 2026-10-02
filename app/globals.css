@@ -61,6 +61,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .toolbar button:hover, .panel-actions button:hover, .button-row button:hover { border-color: var(--border-strong); background: var(--surface-3); }
 .toolbar button:disabled { opacity: .35; cursor: not-allowed; }
 .toolbar .icon-button { width: 34px; padding: 0; font-size: 14px; }
+.view-mode-switch { display: inline-flex; align-items: center; padding: 2px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-0); }
+.toolbar .view-mode-switch button { height: 28px; min-width: 31px; padding: 0 7px; border: 0; background: transparent; color: var(--text-3); }
+.toolbar .view-mode-switch button.active { border-radius: 6px; background: var(--accent-soft); color: var(--text-1); }
+.toolbar button[aria-pressed="true"] { color: var(--text-1); }
 .dirty-dot { align-self: center; width: 7px; height: 7px; margin-left: 3px; border-radius: 50%; background: var(--text-3); }
 .dirty-dot.is-dirty { background: #ffb45e; box-shadow: 0 0 10px rgba(255,180,94,.8); }
 
@@ -71,6 +75,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .sidebar { min-height: 0; overflow: auto; border-color: var(--border); background: var(--surface-1); scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
 .left-sidebar { padding: 19px 16px; border-right: 1px solid var(--border); }
 .inspector { padding: 18px; border-left: 1px solid var(--border); }
+.semantic-z-card { display: grid; gap: 4px; margin: 0 0 13px; padding: 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--accent-soft); }
+.semantic-z-card span, .semantic-z-card small { color: var(--text-2); font-size: 10px; }
+.semantic-z-card strong { font-size: 17px; }
 .eyebrow { margin: 0 0 8px; color: var(--text-3); font-size: 9px; font-weight: 800; letter-spacing: .18em; }
 .panel-intro h1 { margin: 0 0 7px; font-family: Georgia, "Times New Roman", serif; font-size: 21px; font-weight: 500; letter-spacing: -.025em; }
 .panel-intro > p:last-child { margin: 0; color: var(--text-2); font-size: 11px; line-height: 1.55; }
@@ -97,6 +104,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .canvas-stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: radial-gradient(circle at 50% 45%, rgba(87,73,145,.08), transparent 42%), var(--surface-0); }
 .canvas-stage::before { position: absolute; inset: 0; z-index: 0; background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px); background-size: 38px 38px; content: ""; mask-image: radial-gradient(circle, black, transparent 76%); pointer-events: none; }
 .graph-canvas { position: absolute; inset: 0; z-index: 1; }
+.graph-canvas-loading { position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse at center, rgba(18,26,42,.65), rgba(8,11,18,.96) 74%); }
 .graph-canvas canvas { display: block; }
 .graph-tooltip { display: grid; gap: 2px; padding: 7px 9px; border: 1px solid rgba(255,255,255,.16); border-radius: 7px; background: rgba(10,14,22,.9); color: #edf2f7; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
 .graph-tooltip b { font-size: 11px; }
@@ -144,6 +152,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .settings-popover { position: fixed; z-index: 70; top: 58px; right: 16px; display: grid; width: 280px; gap: 13px; padding: 16px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); box-shadow: var(--shadow); }
 .settings-popover strong { font-size: 12px; }
 .settings-popover input[type="range"] { accent-color: var(--accent); }
+.settings-note { margin: -6px 0 0; color: var(--text-2); font-size: 10px; line-height: 1.5; }
 .settings-popover .switch-row, .editor-form .switch-row { display: flex; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; text-transform: none; }
 .switch-row input { width: auto; }
 .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }

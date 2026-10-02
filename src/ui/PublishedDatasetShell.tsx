@@ -88,6 +88,12 @@ export default function PublishedDatasetShell() {
     void boot();
   }, []);
 
+  useEffect(() => {
+    const markLocalDataset = () => { setActiveId("__local__"); setError(""); syncDatasetQuery(null); };
+    window.addEventListener("lms3d:local-dataset", markLocalDataset);
+    return () => window.removeEventListener("lms3d:local-dataset", markLocalDataset);
+  }, []);
+
   return <div className="published-dataset-shell">
     <ClusterEngine />
     {registry && <label className="published-dataset-switcher" htmlFor="published-dataset-select">

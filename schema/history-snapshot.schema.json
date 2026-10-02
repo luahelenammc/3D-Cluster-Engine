@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luahelenammc.github.io/3D-Cluster-Engine/schema/history-snapshot-1.0.schema.json",
+  "title": "Temporal Graph Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["snapshotVersion", "snapshotId", "datasetId", "createdAt", "stateHash", "reason", "dataset"],
+  "properties": {
+    "snapshotVersion": { "const": "1.0" },
+    "snapshotId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "datasetId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "stateHash": { "type": "string", "minLength": 8, "maxLength": 100 },
+    "sourceManifestFingerprint": { "type": "string", "maxLength": 100 },
+    "acceptedProposalId": { "type": "string", "maxLength": 200 },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "dataset": { "$ref": "https://localmoon.source/schema/graph-dataset-1.1.json" }
+  }
+}

@@ -4,6 +4,7 @@ import PublishedDatasetShell from "./ui/PublishedDatasetShell";
 import "../app/globals.css";
 import "../app/semantic-axes.css";
 import "../app/dataset-registry.css";
+import "../app/second-mind.css";
 
 const root = document.getElementById("root");
 
