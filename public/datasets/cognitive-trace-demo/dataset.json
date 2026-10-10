@@ -1,0 +1,747 @@
+{
+  "schemaVersion": "1.1",
+  "meta": {
+    "id": "cognitive-trace-demo",
+    "title": "Trilha Cognitiva — Exemplo Sintético",
+    "description": "Percurso fictício de situação, memória, alternativas, gates e consequência. Não contém dados da EVA-01 nem comprova consciência ou atividade autônoma.",
+    "version": "0.1.0",
+    "source": "Exemplo didático autoral do LMS 3D Cluster Engine",
+    "attribution": [
+      "Inspiração conceitual de superfície: EVA-01 / Domingos Neto, demonstração pública observada em 2026-10-10. Nenhum código, dado ou arquitetura interna da EVA-01 foi reutilizado."
+    ],
+    "tags": [
+      "synthetic",
+      "provenance",
+      "episodic",
+      "graph",
+      "trace"
+    ]
+  },
+  "clusters": [
+    {
+      "id": "context",
+      "label": "Situação e sinais",
+      "color": "#7B9CFF",
+      "description": "Pressões observadas dentro da simulação didática."
+    },
+    {
+      "id": "memory",
+      "label": "Memória e contexto",
+      "color": "#38C5B8",
+      "description": "Lembranças fictícias que podem influenciar uma escolha."
+    },
+    {
+      "id": "deliberation",
+      "label": "Alternativas e propostas",
+      "color": "#F2B55A",
+      "description": "Hipóteses e proposta sem equivalência a ação."
+    },
+    {
+      "id": "governance",
+      "label": "Validação e limites",
+      "color": "#CA88EF",
+      "description": "Regras e verificações entre proposta e consequência."
+    },
+    {
+      "id": "consequence",
+      "label": "Consequências e futuro",
+      "color": "#F07894",
+      "description": "Ação autorizada, registro e situação futura."
+    }
+  ],
+  "nodes": [
+    {
+      "id": "signal",
+      "label": "Sinal: demanda de ajuda",
+      "cluster": "context",
+      "level": 0,
+      "value": 6,
+      "tags": [
+        "observation",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Uma demanda aparece no mundo fictício.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "observation",
+        "step": 0,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:signal",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "pulse-1",
+      "label": "Pulso T1: leitura situada",
+      "cluster": "context",
+      "level": 1,
+      "value": 6,
+      "tags": [
+        "episode",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Marcador do primeiro episódio; não é inferência em tempo real.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "episode",
+        "step": 1,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:pulse-1",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "memory-promise",
+      "label": "Memória: compromisso de cuidado",
+      "cluster": "memory",
+      "level": 1,
+      "value": 6,
+      "tags": [
+        "recalled",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Registro fictício de um compromisso anterior.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "recalled",
+        "step": 1,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:memory-promise",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "memory-limit",
+      "label": "Memória: limite de recursos",
+      "cluster": "memory",
+      "level": 1,
+      "value": 6,
+      "tags": [
+        "recalled",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Histórico fictício de escassez para o mesmo tipo de demanda.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "recalled",
+        "step": 1,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:memory-limit",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "constraint",
+      "label": "Condição: recurso indisponível",
+      "cluster": "context",
+      "level": 1,
+      "value": 6,
+      "tags": [
+        "constraint",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Condição explícita do mundo simulada para o teste.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "constraint",
+        "step": 1,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:constraint",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "option-direct",
+      "label": "Opção A: atender imediatamente",
+      "cluster": "deliberation",
+      "level": 2,
+      "value": 6,
+      "tags": [
+        "candidate",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Alternativa considerada, não executada.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "candidate",
+        "step": 2,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:option-direct",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "option-negotiate",
+      "label": "Opção B: negociar ajuda",
+      "cluster": "deliberation",
+      "level": 2,
+      "value": 6,
+      "tags": [
+        "candidate",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Alternativa que pode respeitar recursos e compromisso.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "candidate",
+        "step": 2,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:option-negotiate",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "proposal",
+      "label": "Proposta: abrir mediação",
+      "cluster": "deliberation",
+      "level": 3,
+      "value": 10,
+      "tags": [
+        "proposal",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Proposta escolhida para revisão; ainda não é uma ação.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "proposal",
+        "step": 3,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:proposal",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "gate-evidence",
+      "label": "Gate: evidência suficiente?",
+      "cluster": "governance",
+      "level": 4,
+      "value": 6,
+      "tags": [
+        "validation",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Verificação ilustrativa de lastro e situação.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "validation",
+        "step": 4,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:gate-evidence",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "gate-authority",
+      "label": "Gate: autoridade e recursos?",
+      "cluster": "governance",
+      "level": 4,
+      "value": 6,
+      "tags": [
+        "validation",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Verificação ilustrativa de permissão e limite.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "validation",
+        "step": 4,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:gate-authority",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "rejected",
+      "label": "Opção A rejeitada",
+      "cluster": "governance",
+      "level": 5,
+      "value": 6,
+      "tags": [
+        "rejection",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "A alternativa direta não passa pelo limite de recursos.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "rejection",
+        "step": 5,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:rejected",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "action",
+      "label": "Ação: convocar mediação",
+      "cluster": "consequence",
+      "level": 6,
+      "value": 10,
+      "tags": [
+        "mutation",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Ação fictícia aprovada pelos gates.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "mutation",
+        "step": 6,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:action",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "consequence",
+      "label": "Consequência: acordo temporário",
+      "cluster": "consequence",
+      "level": 7,
+      "value": 9,
+      "tags": [
+        "outcome",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "O mundo fictício registra uma consequência verificável no exemplo.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "outcome",
+        "step": 7,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:consequence",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "memory-new",
+      "label": "Memória registrada: acordo",
+      "cluster": "memory",
+      "level": 8,
+      "value": 6,
+      "tags": [
+        "record",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Registro fictício da consequência para uso futuro.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "record",
+        "step": 8,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:memory-new",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "pulse-2",
+      "label": "Pulso T2: nova situação",
+      "cluster": "context",
+      "level": 9,
+      "value": 6,
+      "tags": [
+        "episode",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Marcador de retorno; não representa clock autônomo.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "episode",
+        "step": 9,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:pulse-2",
+        "factualStatus": "illustrative_only"
+      }
+    },
+    {
+      "id": "future-choice",
+      "label": "Escolha futura condicionada",
+      "cluster": "consequence",
+      "level": 10,
+      "value": 6,
+      "tags": [
+        "dependent",
+        "synthetic"
+      ],
+      "metadata": {
+        "summary": "Exemplo de possibilidade futura alterada pela memória.",
+        "traceId": "cognitive-trace-synthetic-001",
+        "recordKind": "dependent",
+        "step": 10,
+        "epistemicStatus": "synthetic",
+        "evidenceRef": "fixture:synthetic-001:future-choice",
+        "factualStatus": "illustrative_only"
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "ct-01",
+      "source": "signal",
+      "target": "pulse-1",
+      "type": "initiates",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "inicia",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-1"
+      }
+    },
+    {
+      "id": "ct-02",
+      "source": "pulse-1",
+      "target": "memory-promise",
+      "type": "recalls",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "recupera",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-2"
+      }
+    },
+    {
+      "id": "ct-03",
+      "source": "pulse-1",
+      "target": "memory-limit",
+      "type": "recalls",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "recupera",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-3"
+      }
+    },
+    {
+      "id": "ct-04",
+      "source": "signal",
+      "target": "constraint",
+      "type": "co_occurs_with",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "coexiste com",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-4"
+      }
+    },
+    {
+      "id": "ct-05",
+      "source": "memory-promise",
+      "target": "option-direct",
+      "type": "informs",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "informa",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-5"
+      }
+    },
+    {
+      "id": "ct-06",
+      "source": "memory-promise",
+      "target": "option-negotiate",
+      "type": "informs",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "informa",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-6"
+      }
+    },
+    {
+      "id": "ct-07",
+      "source": "memory-limit",
+      "target": "option-negotiate",
+      "type": "constrains",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "condiciona",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-7"
+      }
+    },
+    {
+      "id": "ct-08",
+      "source": "constraint",
+      "target": "option-direct",
+      "type": "limits",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "limita",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-8"
+      }
+    },
+    {
+      "id": "ct-09",
+      "source": "option-direct",
+      "target": "rejected",
+      "type": "fails_gate",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "falha no gate",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-9"
+      }
+    },
+    {
+      "id": "ct-10",
+      "source": "constraint",
+      "target": "rejected",
+      "type": "justifies",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "justifica",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-10"
+      }
+    },
+    {
+      "id": "ct-11",
+      "source": "option-negotiate",
+      "target": "proposal",
+      "type": "develops_into",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "desdobra-se em",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-11"
+      }
+    },
+    {
+      "id": "ct-12",
+      "source": "proposal",
+      "target": "gate-evidence",
+      "type": "requires",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "depende de",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-12"
+      }
+    },
+    {
+      "id": "ct-13",
+      "source": "proposal",
+      "target": "gate-authority",
+      "type": "requires",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "depende de",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-13"
+      }
+    },
+    {
+      "id": "ct-14",
+      "source": "gate-evidence",
+      "target": "action",
+      "type": "permits",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "autoriza junto com outro gate",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-14"
+      }
+    },
+    {
+      "id": "ct-15",
+      "source": "gate-authority",
+      "target": "action",
+      "type": "permits",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "autoriza junto com outro gate",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-15"
+      }
+    },
+    {
+      "id": "ct-16",
+      "source": "rejected",
+      "target": "action",
+      "type": "excludes_alternative",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "exclui alternativa",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-16"
+      }
+    },
+    {
+      "id": "ct-17",
+      "source": "action",
+      "target": "consequence",
+      "type": "produces",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "produz",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-17"
+      }
+    },
+    {
+      "id": "ct-18",
+      "source": "consequence",
+      "target": "memory-new",
+      "type": "recorded_as",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "é registrada como",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-18"
+      }
+    },
+    {
+      "id": "ct-19",
+      "source": "memory-new",
+      "target": "pulse-2",
+      "type": "available_to",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "fica disponível para",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-19"
+      }
+    },
+    {
+      "id": "ct-20",
+      "source": "pulse-2",
+      "target": "future-choice",
+      "type": "frames",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "contextualiza",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-20"
+      }
+    },
+    {
+      "id": "ct-21",
+      "source": "memory-new",
+      "target": "future-choice",
+      "type": "conditions",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "condiciona",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-21"
+      }
+    },
+    {
+      "id": "ct-22",
+      "source": "consequence",
+      "target": "future-choice",
+      "type": "changes_possibility",
+      "directed": true,
+      "weight": 1,
+      "metadata": {
+        "relation": "altera possibilidade",
+        "evidence": "synthetic",
+        "traceId": "cognitive-trace-synthetic-001",
+        "evidenceRef": "fixture:synthetic-001:edge-22"
+      }
+    }
+  ],
+  "layout": {
+    "mode": "live",
+    "dimensions": 3,
+    "seed": "cognitive-trace-demo-v1",
+    "clusterStrength": 0.035,
+    "chargeStrength": -75,
+    "linkDistance": 64,
+    "collisionPadding": 4,
+    "warmupTicks": 90,
+    "cooldownTicks": 450,
+    "axes": {
+      "enabled": true,
+      "x": {
+        "enabled": true,
+        "source": "cluster",
+        "label": "Família funcional",
+        "strength": 0.4,
+        "span": 310,
+        "missing": "stableIndex"
+      },
+      "y": {
+        "enabled": true,
+        "source": "field",
+        "field": "level",
+        "label": "Etapa lógica do episódio",
+        "strength": 0.44,
+        "span": 350,
+        "missing": "stableIndex"
+      },
+      "z": {
+        "enabled": true,
+        "source": "degree",
+        "label": "Centralidade relacional",
+        "strength": 0.25,
+        "span": 220,
+        "missing": "center"
+      }
+    }
+  },
+  "visual": {
+    "background": "#080b12",
+    "nodeSizeMin": 3,
+    "nodeSizeMax": 12,
+    "linkOpacity": 0.38,
+    "linkWidth": 0.8,
+    "showLabels": "hover",
+    "showDirectionalParticles": true,
+    "dimUnrelatedOnSelection": true
+  },
+  "extensions": {
+    "lms3d.cognitiveTraceDemo": {
+      "status": "synthetic_fixture_only",
+      "traceId": "cognitive-trace-synthetic-001",
+      "sourceClaim": "visual_inspiration_only",
+      "interpretation": "Arestas dirigidas representam dependências lógicas hipotéticas; partículas e layout não são replays temporais.",
+      "unknowns": [
+        "EVA-01 implementation and internal graph",
+        "EVA-01 scores D0-D3 and criteria",
+        "causal role of EVA-01 nodes",
+        "independent cognition or awareness"
+      ]
+    }
+  }
+}
