@@ -63,6 +63,20 @@
         "msl-4.1"
       ],
       "featured": true
+    },
+    {
+      "id": "cognitive-trace-demo",
+      "title": "Trilha Cognitiva — Exemplo Sintético",
+      "description": "Percurso didático fictício de memória, proposta, validação e consequência. Não representa EVA-01 real ou consciência artificial.",
+      "path": "cognitive-trace-demo/dataset.json",
+      "tags": [
+        "demo",
+        "synthetic",
+        "trace",
+        "provenance",
+        "cognition"
+      ],
+      "featured": false
     }
   ]
 }
