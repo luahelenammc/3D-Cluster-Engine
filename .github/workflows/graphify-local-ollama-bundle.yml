@@ -1,0 +1,89 @@
+name: Offline Ollama bundle and synthetic semantic Graphify trial
+
+on:
+  push:
+    branches: [experiment/graphify-synthetic-20261104]
+
+permissions:
+  contents: read
+
+jobs:
+  bundle-local-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      OLLAMA_HOST: "127.0.0.1:11434"
+      OLLAMA_MODELS: "${{ github.workspace }}/ollama_models"
+      GRAPHIFY_QUERY_LOG_DISABLE: "1"
+      OPENAI_API_KEY: ""
+      ANTHROPIC_API_KEY: ""
+      GEMINI_API_KEY: ""
+    steps:
+      - name: Set up local-only public Ollama binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh -o /tmp/install_ollama.sh
+          sudo sh /tmp/install_ollama.sh
+          mkdir -p "$OLLAMA_MODELS"
+          nohup ollama serve >/tmp/ollama_server.log 2>&1 &
+          for i in $(seq 1 35); do
+            curl -fsS http://127.0.0.1:11434/api/tags >/dev/null && break || sleep 1
+          done
+          curl -fsS http://127.0.0.1:11434/api/tags
+      - name: Pull public compact model, no personal input
+        shell: bash
+        run: |
+          set -euo pipefail
+          ollama pull qwen2.5:0.5b
+          ollama list
+          test -d "$OLLAMA_MODELS/blobs"
+      - name: Package executable and public model for offline local processing
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p package/bin package/models
+          cp -L "$(command -v ollama)" package/bin/ollama
+          if test -d /usr/local/lib/ollama; then
+            mkdir -p package/lib
+            cp -a /usr/local/lib/ollama package/lib/ollama
+          fi
+          cp -a "$OLLAMA_MODELS"/. package/models/
+          (cd package && tar -cf ../ollama_public_offline_bundle.tar bin lib models 2>/dev/null || tar -cf ../ollama_public_offline_bundle.tar bin models)
+          sha256sum ollama_public_offline_bundle.tar > ollama_public_offline_bundle.sha256
+          du -h ollama_public_offline_bundle.tar
+      - name: Upload public executable and model (not source documents)
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-local-ollama-public-05b
+          path: |
+            ollama_public_offline_bundle.tar
+            ollama_public_offline_bundle.sha256
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error
+      - name: Semantic smoke of completely synthetic Markdown only
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --break-system-packages 'graphifyy[ollama]==0.9.102'
+          mkdir -p synthetic_semantic
+          cat > synthetic_semantic/synthetic.md <<'MD'
+          # Synthetic relations
+          Laboratory Aurora maintains Project Blueprint. Project Blueprint uses Method Atlas.
+          Method Atlas generates Report Delta. The laboratory does not maintain Project Epsilon.
+          This text is invented for automated tests and contains no personal biography.
+          MD
+          graphify extract "$GITHUB_WORKSPACE/synthetic_semantic" --backend ollama --model "qwen2.5:0.5b" --max-concurrency 1 --max-workers 1 --token-budget 2000 --out "$GITHUB_WORKSPACE/synthetic_semantic_results" 2>&1 | tee synthetic_semantic_extract.log
+          test -s synthetic_semantic_results/graphify-out/graph.json
+      - name: Upload synthetic semantic diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-synthetic-semantic-05b
+          path: |
+            synthetic_semantic_results/
+            synthetic_semantic_extract.log
+          retention-days: 2
+          if-no-files-found: warn
