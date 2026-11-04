@@ -1,0 +1,43 @@
+name: Graphify official Python 3.13 offline wheelhouse
+
+on:
+  push:
+    branches:
+      - experiment/graphify-synthetic-20261104
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle-open-source-deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Python 3.13 matching ChatGPT local runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Download official Graphify and dependencies (NO USER CORPUS)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wheelhouse
+          python -m pip download --only-binary=:all: --dest wheelhouse 'graphifyy[ollama]==0.9.102'
+          python - <<'PY'
+          import hashlib, json, pathlib, sys
+          p=pathlib.Path('wheelhouse')
+          wheels=sorted(p.glob('*.whl'))
+          assert any(x.name.startswith('graphifyy-0.9.102-') for x in wheels), 'official Graphify wheel missing'
+          records=[{'file':w.name,'size':w.stat().st_size,'sha256':hashlib.sha256(w.read_bytes()).hexdigest()} for w in wheels]
+          (p/'SHA256_MANIFEST.json').write_text(json.dumps({'python_version':sys.version,'corpus_sent':False,'wheels':records},indent=2))
+          print('WHEELS',len(records),'TOTAL_MB',round(sum(x['size'] for x in records)/1e6,2))
+          PY
+      - name: Upload wheelhouse for PRIVATE local execution
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-official-python313-wheels
+          path: wheelhouse/
+          retention-days: 2
+          compression-level: 1
+          if-no-files-found: error
