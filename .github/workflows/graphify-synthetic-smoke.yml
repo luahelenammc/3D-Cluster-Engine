@@ -1,0 +1,96 @@
+name: Graphify official engine - synthetic smoke only
+
+on:
+  push:
+    branches:
+      - experiment/graphify-synthetic-20261104
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  graphify-official:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GRAPHIFY_QUERY_LOG_DISABLE: "1"
+      ANTHROPIC_API_KEY: ""
+      OPENAI_API_KEY: ""
+      GEMINI_API_KEY: ""
+    steps:
+      - name: Checkout laboratory branch
+        uses: actions/checkout@v4
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate entirely synthetic fixture
+        shell: bash
+        run: |
+          mkdir -p synthetic_fixture
+          cat > synthetic_fixture/normalize.py <<'PY'
+          def normalize(value: str) -> str:
+              return value.strip().lower()
+
+          def tokenize(value: str) -> list[str]:
+              return [normalize(piece) for piece in value.split()]
+          PY
+          cat > synthetic_fixture/pipeline.py <<'PY'
+          from normalize import normalize, tokenize
+
+          class SyntheticPipeline:
+              def run(self, phrase: str) -> str:
+                  return normalize(" ".join(tokenize(phrase)))
+
+          def demo():
+              return SyntheticPipeline().run(" Synthetic   Relation ")
+          PY
+          cat > synthetic_fixture/README.md <<'MD'
+          # Synthetic fixture - No personal data
+          This synthetic Python corpus verifies AST indexing and official exports.
+          It is NOT the Sobre a Moon semantic corpus.
+          MD
+      - name: Install official Graphify from PyPI
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check 'graphifyy==0.9.102'
+          graphify --version
+      - name: Run Graphify CLI on synthetic code (no LLM)
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p synthetic_results
+          graphify extract "$GITHUB_WORKSPACE/synthetic_fixture" --code-only --max-workers 1 --no-label --out "$GITHUB_WORKSPACE/synthetic_results" 2>&1 | tee synthetic_results/extract.log
+      - name: Audit graph source and export official formats
+        shell: bash
+        run: |
+          set -euo pipefail
+          GRAPH="$GITHUB_WORKSPACE/synthetic_results/graphify-out/graph.json"
+          test -s "$GRAPH"
+          python - <<'PY'
+          import json, pathlib, importlib.metadata
+          p=pathlib.Path("synthetic_results/graphify-out/graph.json")
+          d=json.loads(p.read_text(encoding="utf-8"))
+          assert isinstance(d.get("nodes"),list) and len(d["nodes"])>0, "Graphify produced no nodes"
+          assert isinstance(d.get("links"),list) and len(d["links"])>0, "Graphify produced no edges"
+          v=importlib.metadata.version("graphifyy")
+          assert v=="0.9.102",f"Wrong Graphify version {v}"
+          graphmeta=d.get("graph",{})
+          assert graphmeta.get("graphify_version")==v,"Missing official version signature"
+          summary={"graphify_executed":True,"corpus":"synthetic_code_only","privacy":"no_user_data","version":v,"nodes":len(d["nodes"]),"links":len(d["links"]),"schema_version":graphmeta.get("schema_version"),"semantic_moon_docs_tested":False}
+          pathlib.Path("synthetic_results/SMOKE_ATTESTATION.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
+          print(summary)
+          PY
+          graphify export html --graph "$GRAPH"
+          graphify export obsidian --graph "$GRAPH" --dir "$GITHUB_WORKSPACE/synthetic_results/graphify-out/obsidian"
+          test -s "$GITHUB_WORKSPACE/synthetic_results/graphify-out/obsidian/graph.canvas"
+          find synthetic_results -maxdepth 4 -type f | sort | head -80
+      - name: Upload synthetic results only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-official-synthetic-smoke
+          path: synthetic_results/
+          if-no-files-found: warn
+          retention-days: 3
