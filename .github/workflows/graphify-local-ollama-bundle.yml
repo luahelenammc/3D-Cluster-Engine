@@ -1,4 +1,4 @@
-name: Offline Ollama bundle and synthetic semantic Graphify trial
+name: Offline Ollama CPU-only bundle for Graphify private pilot
 
 on:
   push:
@@ -8,18 +8,14 @@ permissions:
   contents: read
 
 jobs:
-  bundle-local-model:
+  package-public-model-cpu:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     env:
       OLLAMA_HOST: "127.0.0.1:11434"
       OLLAMA_MODELS: "${{ github.workspace }}/ollama_models"
-      GRAPHIFY_QUERY_LOG_DISABLE: "1"
-      OPENAI_API_KEY: ""
-      ANTHROPIC_API_KEY: ""
-      GEMINI_API_KEY: ""
     steps:
-      - name: Set up local-only public Ollama binary
+      - name: Install official Ollama without any user files
         shell: bash
         run: |
           set -euo pipefail
@@ -30,60 +26,106 @@ jobs:
           for i in $(seq 1 35); do
             curl -fsS http://127.0.0.1:11434/api/tags >/dev/null && break || sleep 1
           done
-          curl -fsS http://127.0.0.1:11434/api/tags
-      - name: Pull public compact model, no personal input
+      - name: Download public compact model, no private prompts or data
         shell: bash
         run: |
           set -euo pipefail
           ollama pull qwen2.5:0.5b
           ollama list
           test -d "$OLLAMA_MODELS/blobs"
-      - name: Package executable and public model for offline local processing
+      - name: Copy only CPU shared libraries and model
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p package/bin package/models
+          mkdir -p package/bin package/lib/ollama package/models
           cp -L "$(command -v ollama)" package/bin/ollama
           if test -d /usr/local/lib/ollama; then
-            mkdir -p package/lib
-            cp -a /usr/local/lib/ollama package/lib/ollama
+            du -h --max-depth=2 /usr/local/lib/ollama | tail -40
+            for f in /usr/local/lib/ollama/*.so /usr/local/lib/ollama/*.so.*; do
+              test -e "$f" && cp -a "$f" package/lib/ollama/ || true
+            done
+            for d in /usr/local/lib/ollama/*cpu*; do
+              test -d "$d" && cp -a "$d" package/lib/ollama/ || true
+            done
           fi
           cp -a "$OLLAMA_MODELS"/. package/models/
-          (cd package && tar -cf ../ollama_public_offline_bundle.tar bin lib models 2>/dev/null || tar -cf ../ollama_public_offline_bundle.tar bin models)
-          sha256sum ollama_public_offline_bundle.tar > ollama_public_offline_bundle.sha256
-          du -h ollama_public_offline_bundle.tar
-      - name: Upload public executable and model (not source documents)
+          (cd package && tar -cf ../ollama_public_cpu_bundle.tar bin lib models)
+          sha256sum ollama_public_cpu_bundle.tar > ollama_public_cpu_bundle.sha256
+          du -h ollama_public_cpu_bundle.tar
+          mkdir -p artifact_parts
+          split -d -a 2 -b 95m ollama_public_cpu_bundle.tar artifact_parts/part-
+          sha256sum artifact_parts/* > artifact_parts/parts.sha256
+          cp ollama_public_cpu_bundle.sha256 artifact_parts/
+          find artifact_parts -type f -printf '%f %s bytes\n'
+      - name: Upload checksums for safe reconstruction
         uses: actions/upload-artifact@v4
         with:
-          name: graphify-local-ollama-public-05b
+          name: ollama-cpu-manifests
           path: |
-            ollama_public_offline_bundle.tar
-            ollama_public_offline_bundle.sha256
+            artifact_parts/parts.sha256
+            artifact_parts/ollama_public_cpu_bundle.sha256
           retention-days: 2
+      - name: Upload part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-00
+          path: artifact_parts/part-00
           compression-level: 0
-          if-no-files-found: error
-      - name: Semantic smoke of completely synthetic Markdown only
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m pip install --break-system-packages 'graphifyy[ollama]==0.9.102'
-          mkdir -p synthetic_semantic
-          cat > synthetic_semantic/synthetic.md <<'MD'
-          # Synthetic relations
-          Laboratory Aurora maintains Project Blueprint. Project Blueprint uses Method Atlas.
-          Method Atlas generates Report Delta. The laboratory does not maintain Project Epsilon.
-          This text is invented for automated tests and contains no personal biography.
-          MD
-          graphify extract "$GITHUB_WORKSPACE/synthetic_semantic" --backend ollama --model "qwen2.5:0.5b" --max-concurrency 1 --max-workers 1 --token-budget 2000 --out "$GITHUB_WORKSPACE/synthetic_semantic_results" 2>&1 | tee synthetic_semantic_extract.log
-          test -s synthetic_semantic_results/graphify-out/graph.json
-      - name: Upload synthetic semantic diagnostics
-        if: always()
+          if-no-files-found: ignore
+          retention-days: 2
+      - name: Upload part 01
         uses: actions/upload-artifact@v4
         with:
-          name: graphify-synthetic-semantic-05b
-          path: |
-            synthetic_semantic_results/
-            synthetic_semantic_extract.log
+          name: ollama-cpu-part-01
+          path: artifact_parts/part-01
+          compression-level: 0
+          if-no-files-found: ignore
           retention-days: 2
-          if-no-files-found: warn
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-02
+          path: artifact_parts/part-02
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 2
+      - name: Upload part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-03
+          path: artifact_parts/part-03
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 2
+      - name: Upload part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-04
+          path: artifact_parts/part-04
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 2
+      - name: Upload part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-05
+          path: artifact_parts/part-05
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 2
+      - name: Upload part 06
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-06
+          path: artifact_parts/part-06
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 2
+      - name: Upload part 07
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-cpu-part-07
+          path: artifact_parts/part-07
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 2
