@@ -1,0 +1,34 @@
+name: Ollama missing local CPU llama-server executable
+on:
+  push:
+    branches:
+      - experiment/graphify-synthetic-20261104
+permissions:
+  contents: read
+jobs:
+  runner-binary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Fetch official Ollama public release
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh -o /tmp/install-ollama.sh
+          sudo sh /tmp/install-ollama.sh
+          mkdir -p runner_files
+          echo "Files matching server:"
+          find /usr/local/lib/ollama -maxdepth 3 -type f | grep -E 'llama-server|runner' | head -30
+          test -f /usr/local/lib/ollama/llama-server
+          cp -L /usr/local/lib/ollama/llama-server runner_files/llama-server
+          chmod +x runner_files/llama-server
+          file runner_files/llama-server
+          du -h runner_files/llama-server
+          sha256sum runner_files/llama-server > runner_files/sha256.txt
+      - name: Package official CPU binary only
+        uses: actions/upload-artifact@v4
+        with:
+          name: ollama-official-llama-server-only
+          path: runner_files/
+          compression-level: 1
+          retention-days: 2
