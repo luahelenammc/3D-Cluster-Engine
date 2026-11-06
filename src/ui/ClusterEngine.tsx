@@ -124,6 +124,12 @@ export default function ClusterEngine() {
   const displayGraph = lodProjection?.graph || visibleGraph;
 
   useEffect(() => {
+    if (!lodActive) return;
+    const timer = window.setTimeout(() => graphApi.current?.fit(), 800);
+    return () => window.clearTimeout(timer);
+  }, [lodActive]);
+
+  useEffect(() => {
     const visibleIds = new Set(visibleGraph.nodes.map((node) => node.id));
     if (selectedId && !visibleIds.has(selectedId)) {
       dispatchInteraction({ type: "remove-hidden", visibleIds });
