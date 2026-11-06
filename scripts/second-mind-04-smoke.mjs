@@ -16,7 +16,7 @@ try {
     await page.locator('.second-mind-body input[accept=".md,text/markdown"]').first().setInputFiles({
       name: "qa-synthetic.md", mimeType: "text/markdown", buffer: Buffer.from(text),
     });
-    await page.getByText("qa-synthetic.md").first().waitFor({ timeout: 18000 });
+    await page.locator(".sm-source-list summary").filter({ hasText: "qa-synthetic.md" }).first().waitFor({ timeout: 18000 });
     await page.getByRole("tab", { name: "Knowledge Engine" }).click();
     await page.getByRole("heading", { name: /Knowledge Compiler/ }).waitFor();
     await page.screenshot({ path: "qa-artifacts/second-mind-04-" + spec.name + "-entry.png" });
