@@ -63,7 +63,7 @@ export function buildKnowledgeQueryPacketV2(dataset: GraphDataset, manifest: Sou
       epistemicStatus: assertion?.epistemicStatus || "unverified",
     };
   });
-  const sourceIds = new Set(byLink.values().flatMap((assertion) => assertion.evidence.map((e) => e.sourceId)));
+  const sourceIds = new Set([...byLink.values()].flatMap((assertion) => assertion.evidence.map((e) => e.sourceId)));
   const sourceCandidates = (manifest?.sources || []).filter((source) => sourceIds.has(source.sourceId) || lexicalStructuralScore(query, source.title) > 2).slice(0, 8);
   const sources = sourceCandidates.map((source) => {
     const excerpt = source.content.slice(0, 500).replace(/\s+/g, " ").trim();
