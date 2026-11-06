@@ -38,7 +38,7 @@ export function buildObsidianVaultExport(dataset: GraphDataset, ledger?: Knowled
     const links = outgoing.map((link) => {
       const opposite = link.source === node.id ? link.target : link.source;
       const label = typeof link.metadata?.relation === "string" ? link.metadata.relation : link.type || "related";
-      return "- " + label + ": [[" + mapping[opposite].slice(6, -3) + "|" + (names.get(opposite) || opposite).replace(/[\[\]|]/g, "") + "]]";
+      return "- " + label + ": [[" + mapping[opposite].slice(6, -3) + "|" + (names.get(opposite) || opposite).replaceAll("[", "").replaceAll("]", "").replaceAll("|", "") + "]]";
     });
     const citations = refs.flatMap((item) => item.evidence).slice(0, 30).map((ref) => "- " + ref.path + (ref.anchor ? "#" + ref.anchor : "") + " · " + ref.fingerprint.slice(0, 12));
     const note = [
