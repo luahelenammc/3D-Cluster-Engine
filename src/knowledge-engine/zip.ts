@@ -19,7 +19,7 @@ export function createLocalZip(files: Record<string, string>): Blob {
     return (crc ^ -1) >>> 0;
   }
   for (const [filename, content] of entries) {
-    if (!filename || filename.startsWith("/") || filename.includes("..") || /[\\\x00-\x1f]/.test(filename) || filename.endsWith("/")) throw new Error("Caminho de exportação inseguro.");
+    if (!filename || filename.startsWith("/") || filename.includes("..") || (filename.includes("\\\\") || [...filename].some((char) => char.charCodeAt(0) < 32)) || filename.endsWith("/")) throw new Error("Caminho de exportação inseguro.");
     if (seen.has(filename.toLocaleLowerCase())) throw new Error("Nomes de exportação duplicados.");
     seen.add(filename.toLocaleLowerCase());
     const name = encoder.encode(filename), data = encoder.encode(content), crc = crc32(data);
