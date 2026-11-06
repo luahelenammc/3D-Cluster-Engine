@@ -11,9 +11,11 @@ try {
     page.on("pageerror", (error) => failures.push("pageerror: " + error.message));
     await page.goto("http://127.0.0.1:4173/", { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.getByRole("button", { name: "Second Mind" }).waitFor({ timeout: 45000 });
+    await page.waitForTimeout(1200);
     await page.screenshot({ path: "qa-artifacts/" + spec.name + "-3d.png", fullPage: false });
     await page.getByRole("button", { name: "Agrupar por clusters" }).click();
     await page.getByRole("button", { name: "Voltar aos nós" }).waitFor();
+    await page.waitForTimeout(1000);
     await page.screenshot({ path: "qa-artifacts/" + spec.name + "-lod.png" });
     await page.getByRole("button", { name: "Voltar aos nós" }).click();
     await page.getByRole("button", { name: "Second Mind" }).click();
