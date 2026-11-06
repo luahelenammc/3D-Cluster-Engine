@@ -1,6 +1,4 @@
 import type { ManagedWiki } from "./wiki";
-import { searchManagedWiki } from "./hybrid";
-import { wikiHealth } from "./wiki";
 
 export interface ReadOnlySnapshot {
   snapshotVersion: "1.0"; datasetId: string; revision: number;
