@@ -3,7 +3,7 @@ import type { SourceManifest } from "../second-mind/types";
 import { requestGraphProposal } from "../second-mind/ai-bridge";
 import { validateProposal } from "../second-mind/proposals";
 import { ledgerFromProposal } from "./ledger";
-import type { ExtractionResult, KnowledgeChunk, SemanticExtractor } from "./types";
+import type { ExtractionResult, SemanticExtractor } from "./types";
 
 type BridgeOptions = { endpoint: string; accessToken?: string; explicitlyAuthorized: boolean; maxChunksPerRun?: number };
 
