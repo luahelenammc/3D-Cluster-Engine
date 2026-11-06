@@ -45,7 +45,7 @@ export function buildKnowledgeQueryPacketV2(dataset: GraphDataset, manifest: Sou
   }
   const scored = dataset.nodes.map((node) => ({
     node,
-    score: lexicalStructuralScore(query, [node.label, ...(node.tags || [])].join(" ")) + (node.id === options.selectedNodeId ? 8 : 0) + Math.min(1.5, (degree.get(node.id) || 0) / 12),
+    score: lexicalStructuralScore(query, [node.label, ...(node.tags || [])].join(" ")) + (node.id === options.selectedNodeId ? 8 : 0) + (lexicalStructuralScore(query, node.label) > 0 ? Math.min(1.5, (degree.get(node.id) || 0) / 12) : 0),
   })).sort((a, b) => b.score - a.score || a.node.id.localeCompare(b.node.id));
   const picked = scored.filter((item) => item.score > 0).slice(0, nodesLimit);
   if (options.selectedNodeId && !picked.some((item) => item.node.id === options.selectedNodeId)) {
