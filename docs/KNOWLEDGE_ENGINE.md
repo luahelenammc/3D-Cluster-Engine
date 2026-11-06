@@ -2,7 +2,7 @@
 
 **Owner:** Lua Helena Moon Martins Cardoso  
 **Integration:** source-aware local-first analytical layer on `GraphDataset 1.1` and `GraphStore`  
-**Status:** implemented under `feature/knowledge-engine-integration`, pending final review and publication
+**Status:** integrated into `main` at `911210ca7d44d7688ce57ff42e2502fdb4d6903e`; Pages deploy `42252906712` succeeded (2026-11-06). Semantic accuracy on real private corpora remains unverified.
 
 ## Why this is different from a folder graph
 
