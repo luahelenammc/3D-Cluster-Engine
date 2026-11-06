@@ -45,7 +45,7 @@ export function ledgerFromGraph(dataset: GraphDataset, manifest?: SourceManifest
       predicate: typeof link.metadata?.relation === "string" ? link.metadata.relation : link.type || "related",
       objectId: link.target,
       relationFamily: link.type || "related",
-      directed: link.directed !== false,
+      directed: link.directed === true,
       evidence,
       epistemicStatus,
       reviewStatus: "accepted" as const,
@@ -66,12 +66,12 @@ export function ledgerFromProposal(proposal: GraphDeltaProposal, manifest: Sourc
       objectId: operation.link.target,
       predicate: typeof operation.link.metadata?.relation === "string" ? operation.link.metadata.relation : operation.link.type || "related",
       relationFamily: operation.link.type || "related",
-      directed: operation.link.directed !== false,
+      directed: operation.link.directed === true,
       evidence,
       epistemicStatus: operation.epistemicStatus === "explicit" ? "declared" : operation.epistemicStatus,
       reviewStatus: "proposed",
       confidence: operation.confidence,
-      extractedBy: { provider: proposal.compiler, version: proposal.proposalVersion, privacy: proposal.compiler === "external-import" ? "imported" : "local", recordedAt: proposal.createdAt },
+      extractedBy: { provider: proposal.compiler, version: proposal.proposalVersion, privacy: proposal.compiler === "external-import" ? "imported" : proposal.compiler === "ai-bridge" ? "authorized-remote" : "local", recordedAt: proposal.createdAt },
     };
     return evaluateAssertion(assertion, manifest).health === "current" ? [assertion] : [];
   });
