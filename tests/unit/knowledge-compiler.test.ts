@@ -7,6 +7,7 @@ import { createLocalOllamaEmbeddingProvider, searchManagedWiki } from "../../src
 import { buildSessionContext, lintManagedWiki } from "../../src/knowledge-engine/resume";
 import { exportManagedWikiVault, previewCanvas, previewManagedNoteRoundTrip } from "../../src/knowledge-engine/wiki-interop";
 import { makeReadOnlySnapshot, validatePortableSnapshot } from "../../src/knowledge-engine/portable";
+import { recordTemporalObservation, summarizeTemporalObservations } from "../../src/knowledge-engine/chronology";
 
 const timestamp = "2026-11-06T18:00:00.000Z";
 const citation = { sourceId: "source:seed.md", path: "seed.md", fingerprint: "sha256-valid-123456789", quote: "Aurora financia Boreal.", derivation: "explicit" as const };
@@ -72,6 +73,28 @@ describe("Second Mind 0.4 governed cumulative wiki", () => {
     expect(lintManagedWiki(wiki, changed).some((issue) => issue.severity === "error")).toBe(true);
     const accepted = commitWikiPlan(plan, ["wiki:a"], wiki, timestamp);
     expect(accepted.pages.find((p) => p.pageId === "wiki:b")?.citations.length).toBe(1);
+  });
+  it("distinguishes observedAt from human-entered effective dates and restores its own timeline", () => {
+    const wiki = firstWiki();
+    const observation = recordTemporalObservation(wiki, ledgerFromGraph(dataset, manifest).assertions, {
+      assertionId: "link:ab", validFrom: "2025-01-01", validUntil: "2026-04-01",
+      interpretation: "superseded", note: "Revisor marcou término de validade, sem modificar a fonte.",
+    }, timestamp);
+    const event = observation.temporal?.[0];
+    expect(event?.observedAt).toBe(timestamp);
+    expect(event?.validFrom).toBe("2025-01-01");
+    expect(event?.interpretation).toBe("superseded");
+    expect(summarizeTemporalObservations(observation)).toHaveLength(1);
+    const restored = restoreWikiRevision(observation, wiki.revision, timestamp);
+    expect(restored.temporal).toEqual([]);
+    expect(restored.revision).toBe(observation.revision + 1);
+    expect(() => recordTemporalObservation(wiki, ledgerFromGraph(dataset, manifest).assertions, {
+      assertionId: "link:ab", validFrom: "2026-04-01", validUntil: "2025-01-01",
+      interpretation: "confirmed", note: "Data invertida.",
+    }, timestamp)).toThrow(/Período efetivo inválido/);
+    expect(() => recordTemporalObservation(wiki, ledgerFromGraph(dataset, manifest).assertions, {
+      assertionId: "fake", interpretation: "confirmed", note: "Sem direito de anotação.",
+    }, timestamp)).toThrow(/canônicas aceitas/);
   });
   it("refuses mismatched dataset authority", () => {
     const ledger = ledgerFromGraph(dataset, manifest);
