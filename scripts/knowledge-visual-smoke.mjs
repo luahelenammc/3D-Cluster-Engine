@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import { chromium } from "../.qa-browser/node_modules/playwright/index.mjs";
 import { mkdir } from "node:fs/promises";
 await mkdir("qa-artifacts", { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
