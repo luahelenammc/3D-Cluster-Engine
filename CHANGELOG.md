@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — Knowledge Engine / Second Mind 0.3 (2026-11-06)
+
+- registro de afirmações com evidência, autoridade documental e revisão, preservando citações no aceite de links canônicos;
+- chunking Markdown e planejamento incremental com hashes; integração semântica opt-in com propostas governadas;
+- reconciliação de aliases e contradições apenas como candidatos;
+- query packet v2 com busca local lexical/topológica, pathfinder dirigido e abstinência quando não houver evidências;
+- diagnósticos de comunidades, pontes e interclusters, camadas 3D/2D, inspector de provas e LOD reversível;
+- exportações Obsidian Canvas/Markdown e GraphML, prévia não confiável de graph.json do Graphify;
+- novos contratos JSON Schema, testes sintéticos, QA de browser desktop/mobile e documentação de privacidade;
+- sem novo renderer, dependências Graphify ou uploads automáticos do corpus privado.
+
 ## 0.2.1 — 2026-10-02
 
 - separação entre seleção leve e abertura deliberada do inspector, com resumo do nó e drawer móvel que preserva a seleção ao fechar;
