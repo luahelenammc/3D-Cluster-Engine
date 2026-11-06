@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import KnowledgeWorkbench from "./KnowledgeWorkbench";
 import type { GraphDataset, GraphNode } from "../core/types";
 import type { GraphStore } from "../data/graph-store";
 import { requestGraphProposal, getBridgeHealth, normalizeBridgeUrl, requestQueryAnswer } from "../second-mind/ai-bridge";
@@ -11,7 +12,7 @@ import type { DatasetDiff, GraphDeltaOperation, GraphDeltaProposal, HistorySnaps
 import { buildSourceManifest, type MarkdownFileInput } from "../second-mind/markdown";
 import { createFileSystemWritebackAdapter, directoryPickerAvailable, getVaultFileHandle, pickVaultDirectory, readMarkdownDirectory, type VaultDirectoryHandle, type VaultFileHandle } from "../second-mind/file-system";
 
-type PanelTab = "sources" | "changes" | "ask" | "history" | "writeback";
+type PanelTab = "sources" | "changes" | "ask" | "knowledge" | "history" | "writeback";
 type Toast = { type: "ok" | "error" | "info"; message: string } | null;
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   onClose(): void;
   onLoadDataset(dataset: GraphDataset): void;
   onHighlight(nodeId: string): void;
+  onVisualMode(mode: "semantic" | "evidence" | "inferred" | "contested" | "path", linkIds: string[]): void;
   onToast(toast: Toast): void;
 }
 
@@ -28,6 +30,7 @@ const TAB_LABELS: Array<{ id: PanelTab; label: string }> = [
   { id: "sources", label: "Fontes" },
   { id: "changes", label: "Propostas" },
   { id: "ask", label: "Perguntar" },
+  { id: "knowledge", label: "Knowledge Engine" },
   { id: "history", label: "Histórico" },
   { id: "writeback", label: "Retorno à fonte" },
 ];
@@ -150,7 +153,7 @@ function diffLabel(diff: DatasetDiff | null) {
   return `${count(diff.nodes)} mudanças em nós · ${count(diff.links)} em relações · ${count(diff.clusters)} em clusters${config.length ? ` · configuração: ${config.join(", ")}` : ""}`;
 }
 
-export default function SecondMindPanel({ dataset, store, selectedNode, onClose, onLoadDataset, onHighlight, onToast }: Props) {
+export default function SecondMindPanel({ dataset, store, selectedNode, onClose, onLoadDataset, onHighlight, onVisualMode, onToast }: Props) {
   const [tab, setTab] = useState<PanelTab>("sources");
   const [manifest, setManifest] = useState<SourceManifest | null>(null);
   const [sourceDiff, setSourceDiff] = useState<SourceDiff | null>(null);
@@ -517,6 +520,8 @@ export default function SecondMindPanel({ dataset, store, selectedNode, onClose,
             {answer && <article className="sm-answer"><h4>Resposta</h4><p>{answer.answer}</p>{answer.uncertainty && <small>Incerteza: {answer.uncertainty}</small>}<div>{answer.nodeIds.map((nodeId) => <button key={nodeId} onClick={() => onHighlight(nodeId)}>Abrir nó {nodeId}</button>)}{answer.sourceRefs.map((ref) => <span key={ref.sourceId}>{ref.path}{ref.anchor ? `#${ref.anchor}` : ""}</span>)}</div></article>}
           </>}
         </section>}
+
+        {tab === "knowledge" && <KnowledgeWorkbench dataset={dataset} manifest={manifest} proposal={proposal} selectedNodeId={selectedNode?.id || null} bridgeUrl={bridgeUrl} bridgeAccessToken={bridgeAccessToken} onReviewProposal={(next) => { setProposal(next); setDecisionLog([]); setTab("changes"); }} onHighlight={onHighlight} onVisualMode={onVisualMode} onToast={(toast) => onToast(toast)} />}
 
         {tab === "history" && <section className="second-mind-section" role="tabpanel">
           <div className="sm-section-heading"><div><h3>Histórico semântico local</h3><p>Posições de câmera e coordenadas baked não entram no diff semântico. Restaurar sempre preserva uma cópia do estado atual.</p></div><button onClick={() => void recordSnapshot("manual checkpoint")}>Registrar snapshot</button></div>
