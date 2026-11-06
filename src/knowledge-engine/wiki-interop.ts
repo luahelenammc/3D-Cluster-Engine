@@ -13,13 +13,20 @@ export function exportManagedWikiVault(wiki: ManagedWiki): WikiVaultBundle {
     if (files[filename]) throw new Error("Colisão de nomes de páginas.");
     identityMap[page.pageId] = filename;
   }
+  const namesByNodeId = new Map(wiki.pages.map((page) => [page.nodeId, identityMap[page.pageId]?.slice(6, -3)]));
+  // The canonical wiki uses graph node IDs, while Obsidian resolves page filenames.
+  // Rewrite only the exported copy, so the canonical IDs and evidence remain unchanged.
+  const renderObsidianLinks = (body: string) => body.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (original, id: string, label: string) => {
+    const filename = namesByNodeId.get(id);
+    return filename ? "[[" + filename + "|" + label.replaceAll("|", " ") + "]]" : original;
+  });
   const canvas = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
   wiki.pages.forEach((page, i) => {
     const filename = identityMap[page.pageId];
     files[filename] = [
       "---", "id: " + JSON.stringify(page.nodeId), "wiki_revision: " + page.revision,
       "epistemic_status: " + page.status, "managed_by: lms3d", "---",
-      safeContent(page.body), page.authorNote ? "\n## Nota humana\n" + safeContent(page.authorNote) : "",
+      renderObsidianLinks(safeContent(page.body)), page.authorNote ? "\n## Nota humana\n" + safeContent(page.authorNote) : "",
     ].join("\n");
     canvas.nodes.push({ id: "w-" + chunkKey(page.pageId), type: "file", file: filename,
       x: (i % 10) * 340, y: Math.floor(i / 10) * 260, width: 300, height: 210 });
