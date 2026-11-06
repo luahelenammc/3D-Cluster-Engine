@@ -234,3 +234,5 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
     </div>}
     {manifest && !wiki && mode !== "review" && <div className="sm-actions"><button className="primary-button" onClick={() => setMode("review")}>Revisar primeira compilação</button></div>}
   </section>;
+
+}
