@@ -43,7 +43,8 @@ export function searchManagedWiki(wiki: ManagedWiki, query: string, options: {
     const vector = options.vectors;
     const semantic = vector && vector.queryVector.length === vector.dimensions
       ? Math.max(0, cosine(vector.queryVector, vector.documentVectors[page.pageId] || [])) : 0;
-    const score = bm25 + fuzzy * 0.15 + semantic * 2 + (page.citations.length ? 0.05 : 0);
+    const matched = bm25 > 0 || fuzzy >= 0.60 || semantic >= 0.35;
+    const score = matched ? bm25 + fuzzy * 0.15 + semantic * 2 + (page.citations.length ? 0.05 : 0) : 0;
     return { page, bm25, semantic, score };
   });
   const initial = scored.filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.page.pageId.localeCompare(b.page.pageId));
