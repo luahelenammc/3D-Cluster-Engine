@@ -1,5 +1,5 @@
 import type { GraphDataset } from "../core/types";
-import type { ProposalEvidence, SourceManifest } from "../second-mind/types";
+import type { GraphDeltaProposal, ProposalEvidence, SourceManifest } from "../second-mind/types";
 
 export type EpistemicStatus = "declared" | "derived" | "inferred" | "contested" | "superseded";
 export type ReviewStatus = "proposed" | "accepted" | "rejected" | "needs_review";
@@ -65,6 +65,7 @@ export interface ExtractionResult {
   assertions: KnowledgeAssertion[];
   errors: string[];
   provider: string;
+  proposals?: GraphDeltaProposal[];
 }
 export interface SemanticExtractor {
   id: string;
