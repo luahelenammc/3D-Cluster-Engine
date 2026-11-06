@@ -19,7 +19,7 @@ export function findKnowledgePath(dataset: GraphDataset, from: string, to: strin
     if (options.requireEvidence && !evidenceOk) continue;
     const cost = 1 + (assertion?.epistemicStatus === "inferred" ? 0.6 : 0) + (!evidenceOk ? 0.5 : 0);
     adjacency.get(link.source)?.push({ target: link.target, id: link.id, cost });
-    if (link.directed === false) adjacency.get(link.target)?.push({ target: link.source, id: link.id, cost });
+    if (link.directed !== true) adjacency.get(link.target)?.push({ target: link.source, id: link.id, cost });
   }
   const queue: Array<{ id: string; cost: number; path: string[]; links: string[] }> = [{ id: from, cost: 0, path: [from], links: [] }];
   const best = new Map<string, number>([[from + ":0", 0]]);
