@@ -123,7 +123,7 @@ describe("Second Mind 0.4 local search, continuation and interop", () => {
     const wiki = firstWiki();
     const vault = exportManagedWikiVault(wiki);
     const file = vault.files[vault.identityMap["wiki:a"]];
-    const edited = file + "\\n## Nota humana\\nMinha observação revisada.\\n";
+    const edited = file + "\n## Nota humana\nMinha observação revisada.\n";
     const preview = previewManagedNoteRoundTrip(wiki, edited);
     expect(preview.afterNote).toBe("Minha observação revisada.");
     expect(preview.pageId).toBe("wiki:a");
