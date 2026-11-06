@@ -5,7 +5,7 @@ import { ledgerFromGraph } from "../../src/knowledge-engine/ledger";
 import { annotateWikiPage, commitWikiPlan, planWikiCompilation, restoreWikiRevision, wikiHealth } from "../../src/knowledge-engine/wiki";
 import { createLocalOllamaEmbeddingProvider, searchManagedWiki } from "../../src/knowledge-engine/hybrid";
 import { buildSessionContext, lintManagedWiki } from "../../src/knowledge-engine/resume";
-import { exportManagedWikiVault, previewCanvas } from "../../src/knowledge-engine/wiki-interop";
+import { exportManagedWikiVault, previewCanvas, previewManagedNoteRoundTrip } from "../../src/knowledge-engine/wiki-interop";
 import { makeReadOnlySnapshot, validatePortableSnapshot } from "../../src/knowledge-engine/portable";
 
 const timestamp = "2026-11-06T18:00:00.000Z";
@@ -118,6 +118,18 @@ describe("Second Mind 0.4 local search, continuation and interop", () => {
     expect(Object.keys(bundle.files).some((name) => name.endsWith(".md"))).toBe(true);
     expect(bundle.files["README.md"]).not.toContain("Aurora financia Boreal.");
     expect(() => previewCanvas({ nodes: [{ id: "x", type: "file", file: "../private", x: 0, y: 0, width: 10, height: 10 }], edges: [] }, [])).toThrow(/inseguro/);
+  });
+  it("round-trips only the human-owned part of Obsidian Markdown with explicit revision control", () => {
+    const wiki = firstWiki();
+    const vault = exportManagedWikiVault(wiki);
+    const file = vault.files[vault.identityMap["wiki:a"]];
+    const edited = file + "\\n## Nota humana\\nMinha observação revisada.\\n";
+    const preview = previewManagedNoteRoundTrip(wiki, edited);
+    expect(preview.afterNote).toBe("Minha observação revisada.");
+    expect(preview.pageId).toBe("wiki:a");
+    expect(preview.sourceBodyUnchanged).toBe(true);
+    expect(() => previewManagedNoteRoundTrip(wiki, edited.replace("Aurora financia", "Aurora NÃO financia"))).toThrow(/corpo gerado/);
+    expect(() => previewManagedNoteRoundTrip(wiki, edited.replace("wiki_revision: 1", "wiki_revision: 99"))).toThrow(/Revisão/);
   });
   it("exports an intentionally reduced, read-only MCP snapshot", () => {
     const snapshot = makeReadOnlySnapshot(firstWiki());
