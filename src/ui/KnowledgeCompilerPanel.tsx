@@ -6,7 +6,7 @@ import { loadManagedWiki, saveManagedWiki } from "../second-mind/persistence";
 import { annotateWikiPage, commitWikiPlan, planWikiCompilation, restoreWikiRevision, wikiHealth, type ManagedWiki, type ManagedWikiPage } from "../knowledge-engine/wiki";
 import { buildSessionContext, lintManagedWiki } from "../knowledge-engine/resume";
 import { createLocalOllamaEmbeddingProvider, searchManagedWiki, type EmbeddingIndex, type HybridHit } from "../knowledge-engine/hybrid";
-import { exportManagedWikiZip, exportManagedWikiVault, previewCanvas, type CanvasPreview } from "../knowledge-engine/wiki-interop";
+import { exportManagedWikiZip, exportManagedWikiVault, previewCanvas, previewManagedNoteRoundTrip, type CanvasPreview, type ManagedNotePreview } from "../knowledge-engine/wiki-interop";
 import { makeReadOnlySnapshot } from "../knowledge-engine/portable";
 
 type Mode = "explore" | "ask" | "review";
@@ -40,11 +40,12 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
   const [consent, setConsent] = useState(false);
   const [working, setWorking] = useState(false);
   const [canvasPreview, setCanvasPreview] = useState<CanvasPreview | null>(null);
+  const [noteImport, setNoteImport] = useState<ManagedNotePreview | null>(null);
   const vaultId = manifest?.vaultId || null;
 
   useEffect(() => {
     let live = true;
-    setLoaded(false); setWiki(null); setApproved([]); setHits([]); setVectors(undefined); setCanvasPreview(null);
+    setLoaded(false); setWiki(null); setApproved([]); setHits([]); setVectors(undefined); setCanvasPreview(null); setNoteImport(null);
     if (!vaultId) { setLoaded(true); return () => { live = false; }; }
     void loadManagedWiki(dataset.meta.id, vaultId).then((saved) => {
       if (live) { setWiki(saved || null); setLoaded(true); }
@@ -136,6 +137,29 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
       onToast({ type: "info", message: "Canvas inspecionado sem alterar o grafo ou as fontes." });
     } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Canvas não verificável." }); }
   }
+  async function inspectManagedNote(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    setNoteImport(null);
+    if (!file || !wiki) return;
+    try {
+      if (file.size > 128 * 1024) throw new Error("Nota gerenciada excede 128 KiB.");
+      const pending = previewManagedNoteRoundTrip(wiki, await file.text());
+      setNoteImport(pending);
+      onToast({ type: "info", message: "Importação analisada. Somente a anotação humana pode ser aplicada após sua confirmação." });
+    } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Nota importada inválida." }); }
+  }
+  async function applyManagedNote() {
+    if (!wiki || !noteImport) return;
+    setWorking(true);
+    try {
+      if (wiki.pages.find((p) => p.pageId === noteImport.pageId)?.revision !== noteImport.revision) throw new Error("Revisão da página mudou; reimporte.");
+      await save(annotateWikiPage(wiki, noteImport.pageId, noteImport.afterNote));
+      setNoteImport(null);
+      onToast({ type: "ok", message: "Anotação humana aprovada e salva. O conteúdo compilado permaneceu intacto." });
+    } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Falha na revisão importada." }); }
+    finally { setWorking(false); }
+  }
   const sourceCount = manifest?.sources.length || 0;
   const selectPage = (page: ManagedWikiPage) => { setFocused(page.pageId); setNoteDraft(page.authorNote || ""); onHighlight(page.nodeId); };
 
@@ -209,6 +233,11 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
         <input type="file" accept=".canvas,.json" onChange={(event) => void inspectCanvas(event)} />
       </label>
       {canvasPreview && <p role="status">Canvas válido: {canvasPreview.fileNodes} arquivos, {canvasPreview.edges} relações. {canvasPreview.warnings.join("; ") || "Nenhuma referência ausente detectada."} Importação é prévia, sem writeback.</p>}
+      <details><summary>Round-trip de nota humana do Obsidian</summary>
+        <p>Edite somente “Nota humana” em um .md exportado. O corpo compilado é protegido e não aceita importação modificada.</p>
+        <label className="sm-field">Revisar nota .md<input type="file" accept=".md,text/markdown" onChange={(event) => void inspectManagedNote(event)} /></label>
+        {noteImport && <article className="sm-knowledge-assertion"><b>{noteImport.title}</b><p>Antes: {noteImport.beforeNote || "Sem nota"}</p><p>Depois: {noteImport.afterNote || "Remover nota"}</p><button disabled={working} onClick={() => void applyManagedNote()}>Aplicar apenas nota humana</button></article>}
+      </details>
     </div>}
     {wiki && mode === "ask" && <div className="knowledge-mode-panel">
       <h4>Consultar e retomar</h4>
