@@ -1,4 +1,5 @@
 import type { GraphDataset } from "../core/types";
+import type { TemporalObservation } from "./chronology";
 import type { SourceManifest } from "../second-mind/types";
 import { evaluateAssertion } from "./ledger";
 import type { KnowledgeLedger, KnowledgeEvidence } from "./types";
@@ -11,11 +12,12 @@ export interface ManagedWikiPage {
   status: WikiPageStatus; sourceKey: string; revision: number; updatedAt: string;
   authorNote?: string;
 }
-export interface WikiRevision { revision: number; manifestFingerprint: string; pages: ManagedWikiPage[]; recordedAt: string }
-export interface WikiEvent { eventId: string; at: string; revision: number; action: "compiled" | "annotated" | "restored"; pageIds: string[] }
+export interface WikiRevision { revision: number; manifestFingerprint: string; pages: ManagedWikiPage[]; recordedAt: string; temporal?: TemporalObservation[] }
+export interface WikiEvent { eventId: string; at: string; revision: number; action: "compiled" | "annotated" | "restored" | "temporal"; pageIds: string[] }
 export interface ManagedWiki {
   wikiVersion: "1.0"; datasetId: string; vaultId: string; manifestFingerprint: string;
   revision: number; pages: ManagedWikiPage[]; history: WikiRevision[]; log: WikiEvent[];
+  temporal?: TemporalObservation[];
   updatedAt: string;
 }
 export interface WikiChange { pageId: string; action: "add" | "revise" | "stale"; before?: ManagedWikiPage; after: ManagedWikiPage }
@@ -116,9 +118,9 @@ export function commitWikiPlan(plan: WikiPlan, selected: string[], previous?: Ma
   const pages = new Map(previous?.pages.map((page) => [page.pageId, page]) || []);
   for (const change of plan.changes) if (accepted.has(change.pageId)) pages.set(change.pageId, { ...change.after, updatedAt: at });
   const revision = (previous?.revision || 0) + 1;
-  const history = previous ? [...previous.history, { revision: previous.revision, manifestFingerprint: previous.manifestFingerprint, pages: previous.pages, recordedAt: previous.updatedAt }].slice(-6) : [];
+  const history = previous ? [...previous.history, { revision: previous.revision, manifestFingerprint: previous.manifestFingerprint, pages: previous.pages, temporal: previous.temporal || [], recordedAt: previous.updatedAt }].slice(-6) : [];
   return { wikiVersion: "1.0", datasetId: plan.datasetId, vaultId: plan.vaultId, manifestFingerprint: plan.manifestFingerprint,
-    revision, pages: [...pages.values()].sort((a, b) => a.pageId.localeCompare(b.pageId)), history,
+    revision, pages: [...pages.values()].sort((a, b) => a.pageId.localeCompare(b.pageId)), history, temporal: previous?.temporal || [],
     log: [...(previous?.log || []), { eventId: "rev:" + revision, at, revision, action: "compiled" as const, pageIds: [...accepted] }].slice(-200),
     updatedAt: at,
   };
@@ -128,16 +130,16 @@ export function annotateWikiPage(wiki: ManagedWiki, pageId: string, authorNote: 
   if (!wiki.pages.some((p) => p.pageId === pageId)) throw new Error("Página desconhecida.");
   const revision = wiki.revision + 1;
   return { ...wiki, revision, pages: wiki.pages.map((p) => p.pageId === pageId ? { ...p, authorNote, revision: p.revision + 1, updatedAt: at } : p),
-    history: [...wiki.history, { revision: wiki.revision, pages: wiki.pages, manifestFingerprint: wiki.manifestFingerprint, recordedAt: wiki.updatedAt }].slice(-6),
+    history: [...wiki.history, { revision: wiki.revision, pages: wiki.pages, temporal: wiki.temporal || [], manifestFingerprint: wiki.manifestFingerprint, recordedAt: wiki.updatedAt }].slice(-6),
     log: [...wiki.log, { eventId: "rev:" + revision, revision, at, action: "annotated" as const, pageIds: [pageId] }].slice(-200), updatedAt: at };
 }
 export function restoreWikiRevision(wiki: ManagedWiki, revision: number, at = new Date().toISOString()): ManagedWiki {
   const target = wiki.history.find((h) => h.revision === revision);
   if (!target) throw new Error("Revisão histórica indisponível.");
   const next = wiki.revision + 1;
-  return { ...wiki, revision: next, pages: target.pages,
+  return { ...wiki, revision: next, pages: target.pages, temporal: target.temporal || [],
     manifestFingerprint: target.manifestFingerprint,
-    history: [...wiki.history, { revision: wiki.revision, pages: wiki.pages, manifestFingerprint: wiki.manifestFingerprint, recordedAt: wiki.updatedAt }].slice(-6),
+    history: [...wiki.history, { revision: wiki.revision, pages: wiki.pages, temporal: wiki.temporal || [], manifestFingerprint: wiki.manifestFingerprint, recordedAt: wiki.updatedAt }].slice(-6),
     log: [...wiki.log, { eventId: "rev:" + next, revision: next, at, action: "restored" as const, pageIds: target.pages.map((p) => p.pageId) }].slice(-200), updatedAt: at };
 }
 export function wikiHealth(wiki: ManagedWiki, manifest: SourceManifest) {
