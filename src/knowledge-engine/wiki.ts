@@ -119,7 +119,7 @@ export function commitWikiPlan(plan: WikiPlan, selected: string[], previous?: Ma
   const history = previous ? [...previous.history, { revision: previous.revision, manifestFingerprint: previous.manifestFingerprint, pages: previous.pages, recordedAt: previous.updatedAt }].slice(-6) : [];
   return { wikiVersion: "1.0", datasetId: plan.datasetId, vaultId: plan.vaultId, manifestFingerprint: plan.manifestFingerprint,
     revision, pages: [...pages.values()].sort((a, b) => a.pageId.localeCompare(b.pageId)), history,
-    log: [...(previous?.log || []), { eventId: "rev:" + revision, at, revision, action: "compiled", pageIds: [...accepted] }].slice(-200),
+    log: [...(previous?.log || []), { eventId: "rev:" + revision, at, revision, action: "compiled" as const, pageIds: [...accepted] }].slice(-200),
     updatedAt: at,
   };
 }
@@ -129,7 +129,7 @@ export function annotateWikiPage(wiki: ManagedWiki, pageId: string, authorNote: 
   const revision = wiki.revision + 1;
   return { ...wiki, revision, pages: wiki.pages.map((p) => p.pageId === pageId ? { ...p, authorNote, revision: p.revision + 1, updatedAt: at } : p),
     history: [...wiki.history, { revision: wiki.revision, pages: wiki.pages, manifestFingerprint: wiki.manifestFingerprint, recordedAt: wiki.updatedAt }].slice(-6),
-    log: [...wiki.log, { eventId: "rev:" + revision, revision, at, action: "annotated", pageIds: [pageId] }].slice(-200), updatedAt: at };
+    log: [...wiki.log, { eventId: "rev:" + revision, revision, at, action: "annotated" as const, pageIds: [pageId] }].slice(-200), updatedAt: at };
 }
 export function restoreWikiRevision(wiki: ManagedWiki, revision: number, at = new Date().toISOString()): ManagedWiki {
   const target = wiki.history.find((h) => h.revision === revision);
@@ -138,7 +138,7 @@ export function restoreWikiRevision(wiki: ManagedWiki, revision: number, at = ne
   return { ...wiki, revision: next, pages: target.pages,
     manifestFingerprint: target.manifestFingerprint,
     history: [...wiki.history, { revision: wiki.revision, pages: wiki.pages, manifestFingerprint: wiki.manifestFingerprint, recordedAt: wiki.updatedAt }].slice(-6),
-    log: [...wiki.log, { eventId: "rev:" + next, revision: next, at, action: "restored", pageIds: target.pages.map((p) => p.pageId) }].slice(-200), updatedAt: at };
+    log: [...wiki.log, { eventId: "rev:" + next, revision: next, at, action: "restored" as const, pageIds: target.pages.map((p) => p.pageId) }].slice(-200), updatedAt: at };
 }
 export function wikiHealth(wiki: ManagedWiki, manifest: SourceManifest) {
   const active = new Map(manifest.sources.map((s) => [s.sourceId, s.fingerprint]));
