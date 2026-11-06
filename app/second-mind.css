@@ -163,3 +163,23 @@
 .knowledge-lod-control button { min-height: 31px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 9px; background: rgba(6,14,23,.88); color: var(--text-1); cursor: pointer; }
 .knowledge-lod-control button[aria-pressed="true"] { border-color: rgba(121,226,236,.6); color: #a8eff5; }
 @media (max-width: 760px) { .knowledge-lod-control { top: 14px; left: 8px; } .knowledge-lod-control span { display: none; } }
+
+/* Second Mind 0.4: cohesive, compact modes rather than more dashboards. */
+.knowledge-compiler { border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 12px 0 16px; background: var(--surface-2); display: grid; gap: 11px; min-width: 0; }
+.knowledge-compiler .sm-section-heading { margin: 0; }
+.knowledge-tabs { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.knowledge-tabs button { border-radius: 7px; padding: 9px 4px; min-width: 0; font-size: 12px; }
+.knowledge-tabs button[aria-pressed="true"] { background: rgba(121,226,236,.15); border-color: #75bfcd; color: #b7f4fa; }
+.knowledge-mode-panel { display: grid; gap: 11px; min-width: 0; }
+.knowledge-mode-panel h4 { margin: 2px 0; font-size: 13px; }
+.knowledge-mode-panel p { line-height: 1.55; overflow-wrap: anywhere; }
+.knowledge-mode-panel .sm-metrics { margin: 0; }
+.knowledge-review-queue { display: grid; gap: 7px; max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.knowledge-review-queue article { min-width: 0; }
+.knowledge-review-queue label { display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; font-size: 12px; }
+.knowledge-review-queue input { margin-top: 3px; }
+.knowledge-page-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.knowledge-mode-panel .sm-field select, .knowledge-mode-panel .sm-field textarea { width: 100%; min-width: 0; padding: 9px; border-radius: 8px; border: 1px solid var(--border); color: var(--text-1); background: var(--surface-1); font-family: inherit; }
+.knowledge-legacy { margin-top: 10px; padding-top: 12px; }
+.knowledge-legacy > summary { font-weight: 600; font-size: 12px; }
+@media (max-width: 760px) { .knowledge-compiler { padding: 9px; } .knowledge-tabs button { font-size: 11px; } .knowledge-review-queue { max-height: 280px; } }

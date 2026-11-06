@@ -2,6 +2,10 @@
 
 Uma engine web genérica para visualizar, explorar e editar grafos 3D organizados por clusters. O renderer recebe um snapshot mutável; o dataset canônico permanece separado, validado, migrável e exportável.
 
+## Second Mind 0.4 · Knowledge Compiler
+
+O [Knowledge Compiler](docs/SECOND_MIND_04.md) adiciona wiki derivada cumulativa, revisão seletiva, memória de retomada, busca BM25 e vetores Ollama locais opcionais, temporalidade revisada, vault Obsidian com round-trip somente da nota humana e ferramentas MCP stdio somente leitura. O `GraphDataset 1.1`, o renderer e os controles de consentimento não mudam. O compilador não sintetiza semanticamente o corpus inteiro sem evidências.
+
 ## Knowledge Engine · Second Mind 0.3 (integração de conhecimento)
 
 O motor 3D continua como superfície espacial, mas o **Knowledge Engine** amplia a camada Second Mind com:

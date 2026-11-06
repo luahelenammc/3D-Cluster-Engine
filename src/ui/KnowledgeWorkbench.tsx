@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import KnowledgeCompilerPanel from "./KnowledgeCompilerPanel";
 import type { GraphDataset } from "../core/types";
 import type { GraphDeltaProposal, SourceManifest } from "../second-mind/types";
 import { loadKnowledgeLedger, saveKnowledgeLedger } from "../second-mind/persistence";
@@ -136,6 +137,8 @@ export default function KnowledgeWorkbench({ dataset, manifest, proposal, select
 
   return <section className="second-mind-section" role="tabpanel" aria-label="Knowledge Engine">
     <div className="sm-section-heading"><div><h3>Knowledge Engine · Obsidian + IA + grafo espacial</h3><p>As relações são investigáveis, mas a fonte governa e a IA só propõe. Nada é publicado ou escrito automaticamente.</p></div></div>
+    <KnowledgeCompilerPanel dataset={dataset} manifest={manifest} ledger={combinedLedger} selectedNodeId={selectedNodeId} onHighlight={onHighlight} onToast={onToast} />
+    <details className="sm-advanced-disclosure knowledge-legacy"><summary>Ferramentas anteriores · análise espacial e extração 0.3</summary>
     <div className="sm-metrics">
       <span><b>{topology.communities.length}</b> comunidades detectadas</span>
       <span><b>{topology.components.length}</b> componentes</span>
@@ -190,5 +193,6 @@ export default function KnowledgeWorkbench({ dataset, manifest, proposal, select
     <div className="sm-actions"><button className="primary-button" onClick={exportVault}>Baixar vault Obsidian + Canvas (.zip)</button><button onClick={() => download("knowledge-graph.graphml", new Blob([exportGraphML(dataset)], { type: "application/xml" }))}>GraphML</button></div>
     <label className="sm-field">Inspecionar graph.json do Graphify<input type="file" accept=".json,application/json" onChange={(event) => void importGraphify(event)} /></label>
     {preview && <article className="sm-answer"><b>Prévia não verificada</b><p>{preview.nodes.length} nós · {preview.links.length} relações. Nenhuma importação foi aplicada ao grafo.</p>{preview.warnings.map((warning) => <p key={warning}>{warning}</p>)}<button className="quiet" onClick={() => download("graphify-import-preview.json", jsonBlob(preview))}>Exportar auditoria da prévia</button></article>}
+    </details>
   </section>;
 }
