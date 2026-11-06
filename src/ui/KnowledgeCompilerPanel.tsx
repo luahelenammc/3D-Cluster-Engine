@@ -239,7 +239,7 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
         <button disabled={working || !temporalId || !temporalNote.trim()} onClick={() => void saveTemporal()}>Registrar marco temporal</button>
         <small>Registro local por ação. Não retira nem substitui o estado epistemológico canônico automaticamente.</small>
       </details>
-      {issues.length > 0 && <details><summary>Lint: {issues.length} alertas de proveniência</summary>{issues.slice(0, 50).map((issue, i) => <p key={issue.pageId + ":" + i}>{issue.severity}: {issue.pageId} · {issue.message}</p>)}</details>
+      {issues.length > 0 && <details><summary>Lint: {issues.length} alertas de proveniência</summary>{issues.slice(0, 50).map((issue, i) => <p key={issue.pageId + ":" + i}>{issue.severity}: {issue.pageId} · {issue.message}</p>)}</details>}
     </div>}
     {wiki && mode === "explore" && <div className="knowledge-mode-panel">
       <h4>Wiki derivada</h4>
