@@ -150,3 +150,11 @@
   .knowledge-layer-indicator { left: 8px; right: 8px; top: 8px; max-width: none; transform: none; justify-content: center; }
   .sm-knowledge-assertion { padding: 9px; }
 }
+
+.relation-evidence-entry { display: grid; gap: 5px; margin-bottom: 8px; }
+.relation-evidence-entry > button { width: 100%; }
+.relation-evidence-entry details { border-left: 2px solid rgba(121,226,236,.4); padding: 4px 9px; color: var(--text-2); font-size: 10px; }
+.relation-evidence-entry summary { cursor: pointer; overflow-wrap: anywhere; }
+.relation-evidence-entry details p { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.relation-evidence-entry details p b { color: var(--text-1); }
+.relation-evidence-entry details p small { display: block; font-size: 9px; color: var(--text-3); }
