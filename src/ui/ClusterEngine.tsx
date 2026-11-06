@@ -6,6 +6,7 @@ import { computeSemanticTargets, resolveSemanticAxes } from "../core/spatial";
 import type { AxisDimension, GraphDataset, GraphLink, GraphNode, GraphViewMode, RuntimeGraph, SemanticAxisConfig, SemanticAxisSource, ValidationIssue } from "../core/types";
 import { importFiles, downloadDataset } from "../data/adapters";
 import { GraphStore } from "../data/graph-store";
+import { aggregateClusterProjection } from "../knowledge-engine/aggregation";
 import { validateDataset } from "../data/validate";
 import type { GraphCanvasApi } from "../renderer/GraphCanvas";
 import { EMPTY_GRAPH_INTERACTION, reduceGraphInteraction, searchGraphNodes, type LabelDensity } from "../renderer/interaction";
@@ -51,6 +52,7 @@ export default function ClusterEngine() {
   const [showSecondMind, setShowSecondMind] = useState(false);
   const [knowledgeMode, setKnowledgeMode] = useState<"semantic" | "evidence" | "inferred" | "contested" | "path">("semantic");
   const [knowledgeLinkIds, setKnowledgeLinkIds] = useState<string[]>([]);
+  const [lodActive, setLodActive] = useState(false);
   const [viewMode, setViewMode] = useState<GraphViewMode>(() => typeof window !== "undefined" && localStorage.getItem("lms3d.view-mode.v1") === "2d" ? "2d" : "3d");
   const [labelDensity, setLabelDensity] = useState<LabelDensity>(() => {
     const stored = localStorage.getItem("lms3d.label-density.v1");
@@ -118,6 +120,9 @@ export default function ClusterEngine() {
     return { nodes: runtime.nodes.filter((node) => nodeIds.has(node.id)), links: runtime.links.filter((link) => nodeIds.has(idOf(link.source)) && nodeIds.has(idOf(link.target)) && visibleTypes.has(link.type || "related") && link.visible !== false) };
   }, [store, dataset, visibleClusters, visibleTypes]);
 
+  const lodProjection = useMemo(() => lodActive ? aggregateClusterProjection(visibleGraph, clusters) : null, [lodActive, visibleGraph, clusters]);
+  const displayGraph = lodProjection?.graph || visibleGraph;
+
   useEffect(() => {
     const visibleIds = new Set(visibleGraph.nodes.map((node) => node.id));
     if (selectedId && !visibleIds.has(selectedId)) {
@@ -138,6 +143,14 @@ export default function ClusterEngine() {
   }
 
   function selectNode(id: string | null) {
+    if (id && lodProjection?.membership[id]) {
+      const selectedCluster = id.slice(4);
+      setLodActive(false);
+      setVisibleClusters(new Set([selectedCluster]));
+      dispatchInteraction({ type: "select", nodeId: null });
+      setToast({ type: "info", message: "Visão agregada aberta no cluster " + selectedCluster + ". Use o filtro para ver todos novamente." });
+      return;
+    }
     dispatchInteraction({ type: "select", nodeId: id });
     if (id === null) setRightOpen(false);
     else if (isMobileViewport()) setLeftOpen(false);
@@ -270,7 +283,8 @@ export default function ClusterEngine() {
         </aside>}
 
         <section className="canvas-stage">
-          <Suspense fallback={<div className="graph-canvas-loading" role="img" aria-label="Carregando visualização do grafo…" />}><GraphCanvas ref={graphApi} graph={visibleGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} inspectedId={inspectedId} labelDensity={labelDensity} viewMode={viewMode} knowledgeMode={knowledgeMode} knowledgeLinkIds={knowledgeLinkIds} onSelect={selectNode} onInspect={inspectNode} onSimulation={setSimulation} /></Suspense>
+          <Suspense fallback={<div className="graph-canvas-loading" role="img" aria-label="Carregando visualização do grafo…" />}><GraphCanvas ref={graphApi} graph={displayGraph} clusters={clusters} layout={dataset.layout} visual={dataset.visual} selectedId={selectedId} inspectedId={inspectedId} labelDensity={labelDensity} viewMode={viewMode} knowledgeMode={knowledgeMode} knowledgeLinkIds={knowledgeLinkIds} onSelect={selectNode} onInspect={(id) => lodProjection?.membership[id] ? selectNode(id) : inspectNode(id)} onSimulation={setSimulation} /></Suspense>
+          <div className="knowledge-lod-control"><button type="button" aria-pressed={lodActive} onClick={() => { setLodActive((value) => !value); setKnowledgeMode("semantic"); setKnowledgeLinkIds([]); }}>{lodActive ? "Voltar aos nós" : "Agrupar por clusters"}</button>{lodActive && <span>{lodProjection?.graph.nodes.length || 0} agregados · a fonte não mudou</span>}</div>
           {knowledgeMode !== "semantic" && <div className="knowledge-layer-indicator" role="status"><b>Knowledge Engine · {knowledgeMode}</b><span>{knowledgeMode === "path" ? knowledgeLinkIds.length + " relações destacadas" : "Camada diagnóstica · sem alterar fontes"}</span><button type="button" onClick={() => { setKnowledgeMode("semantic"); setKnowledgeLinkIds([]); }}>Limpar</button></div>}
           <div className="label-density-control" role="group" aria-label="Densidade dos rótulos">
             {([{ id: "essential", label: "Essenciais" }, { id: "context", label: "Contexto" }, { id: "more", label: "Mais" }] as const).map((option) => <button key={option.id} type="button" aria-pressed={labelDensity === option.id} onClick={() => setLabelDensity(option.id)}>{option.label}</button>)}
@@ -290,7 +304,7 @@ export default function ClusterEngine() {
 
       <footer className="statusbar"><span><i className={`status-light ${simulation}`} /> física: {simulation}</span><span>{visibleGraph.nodes.length}/{dataset.nodes.length} nós visíveis</span><span>{visibleGraph.links.length}/{dataset.links.length} links visíveis</span><span>layout: {dataset.layout?.mode || "live"}</span><span>{axes.enabled ? "eixos: semânticos" : "eixos: livres"}</span><span>{issues.length ? `${issues.length} aviso(s)` : "dados válidos"}</span><span className="status-spacer" /><span>{viewMode === "2d" ? "plano XY · pan · zoom · arraste · Z no inspector" : "arraste · órbita · scroll zoom"}</span></footer>
       {toast && <div className={`toast ${toast.type}`}>{toast.message}</div>}
-      {showSecondMind && <Suspense fallback={<div className="second-mind-backdrop"><div className="second-mind-panel" role="status">Carregando Second Mind…</div></div>}><SecondMindPanel dataset={dataset} store={store} selectedNode={selectedNode} onClose={() => setShowSecondMind(false)} onLoadDataset={loadSecondMindDataset} onHighlight={highlightFromSecondMind} onVisualMode={(mode, linkIds) => { setKnowledgeMode(mode); setKnowledgeLinkIds(linkIds); }} onToast={setToast} /></Suspense>}
+      {showSecondMind && <Suspense fallback={<div className="second-mind-backdrop"><div className="second-mind-panel" role="status">Carregando Second Mind…</div></div>}><SecondMindPanel dataset={dataset} store={store} selectedNode={selectedNode} onClose={() => setShowSecondMind(false)} onLoadDataset={loadSecondMindDataset} onHighlight={highlightFromSecondMind} onVisualMode={(mode, linkIds) => { setKnowledgeMode(mode); setKnowledgeLinkIds(linkIds); if (mode !== "semantic") setLodActive(false); }} onToast={setToast} /></Suspense>}
       {showAddNode && <AddNodeDialog dataset={dataset} onClose={() => setShowAddNode(false)} onAdd={(node) => { try { store.addNode(node); setShowAddNode(false); selectNode(node.id); setToast({ type: "ok", message: "Nó criado." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao criar nó." }); } }} />}
       {showAddLink && <AddLinkDialog dataset={dataset} onClose={() => setShowAddLink(false)} onAdd={(link) => { try { store.addLink(link); setShowAddLink(false); setToast({ type: "ok", message: "Link criado." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao criar link." }); } }} />}
       {showJsonEditor && <JsonEditorDialog dataset={dataset} onClose={() => setShowJsonEditor(false)} onApply={(next) => { try { const result = validateDataset(next); if (!result.valid) throw new Error(result.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("\n")); store.replace(next, true); setVisibleClusters(new Set((next.clusters || []).map((cluster) => cluster.id))); setVisibleTypes(new Set(next.links.map((link) => link.type || "related"))); selectNode(null); setShowJsonEditor(false); setToast({ type: "ok", message: "Dataset canônico substituído." }); } catch (error) { setToast({ type: "error", message: error instanceof Error ? error.message : "JSON inválido." }); } }} />}
