@@ -1,4 +1,5 @@
 import type { KnowledgeLedger } from "../knowledge-engine/types";
+import type { ManagedWiki } from "../knowledge-engine/wiki";
 import type { HistorySnapshot, SourceManifest } from "./types";
 import type { VaultDirectoryHandle } from "./file-system";
 
@@ -137,4 +138,49 @@ export async function saveKnowledgeLedger(ledger: KnowledgeLedger): Promise<void
 
 export async function loadKnowledgeLedger(datasetId: string): Promise<KnowledgeLedger | undefined> {
   return readRecord<KnowledgeLedger>(VAULT_STORE, "knowledge-ledger:" + encodeURIComponent(datasetId));
+}
+
+/** All pages, history and log advance in one IndexedDB record transaction. */
+const wikiKey = (datasetId: string, vaultId: string) =>
+  "managed-wiki:" + encodeURIComponent(datasetId) + ":" + encodeURIComponent(vaultId);
+
+export async function loadManagedWiki(datasetId: string, vaultId: string): Promise<ManagedWiki | undefined> {
+  return readRecord<ManagedWiki>(VAULT_STORE, wikiKey(datasetId, vaultId));
+}
+export async function saveManagedWiki(next: ManagedWiki, expectedRevision: number): Promise<void> {
+  if (next.wikiVersion !== "1.0" || next.revision !== expectedRevision + 1 || next.revision < 1) throw new Error("Revisão inválida.");
+  const payload = JSON.stringify(next);
+  if (payload.length > 6 * 1024 * 1024) throw new Error("Wiki excede 6 MiB de armazenamento local.");
+  const key = wikiKey(next.datasetId, next.vaultId);
+  const db = await openDatabase();
+  if (!db) {
+    if (typeof localStorage === "undefined") throw new Error("Armazenamento indisponível.");
+    const old = localStorage.getItem(key);
+    const existing = old ? JSON.parse(old) as ManagedWiki : undefined;
+    if ((existing?.revision || 0) !== expectedRevision) throw new Error("Outra sessão alterou a wiki; recarregue e revise.");
+    localStorage.setItem(key, payload);
+    const check = localStorage.getItem(key);
+    if (check !== payload) throw new Error("Falha no readback da wiki.");
+    return;
+  }
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(VAULT_STORE, "readwrite");
+    const store = transaction.objectStore(VAULT_STORE);
+    const request = store.get(key);
+    request.onsuccess = () => {
+      const existing = request.result?.value as ManagedWiki | undefined;
+      if ((existing?.revision || 0) !== expectedRevision) {
+        transaction.abort();
+        reject(new Error("Outra sessão alterou a wiki; recarregue e revise."));
+        return;
+      }
+      store.put({ key, value: next });
+    };
+    request.onerror = () => reject(request.error || new Error("Falha ao ler a revisão da wiki."));
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error("Falha ao salvar wiki."));
+    transaction.onabort = () => reject(new Error("Transação da wiki cancelada."));
+  });
+  const saved = await loadManagedWiki(next.datasetId, next.vaultId);
+  if (saved?.revision !== next.revision || saved.pages.length !== next.pages.length) throw new Error("Readback inconsistente após gravar wiki.");
 }
