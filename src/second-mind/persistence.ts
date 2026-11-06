@@ -1,3 +1,4 @@
+import type { KnowledgeLedger } from "../knowledge-engine/types";
 import type { HistorySnapshot, SourceManifest } from "./types";
 import type { VaultDirectoryHandle } from "./file-system";
 
@@ -128,4 +129,12 @@ async function deleteHistorySnapshot(snapshot: HistorySnapshot): Promise<void> {
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error || new Error("Falha ao limitar histórico local."));
   });
+}
+
+export async function saveKnowledgeLedger(ledger: KnowledgeLedger): Promise<void> {
+  await writeRecord(VAULT_STORE, "knowledge-ledger:" + encodeURIComponent(ledger.datasetId), ledger);
+}
+
+export async function loadKnowledgeLedger(datasetId: string): Promise<KnowledgeLedger | undefined> {
+  return readRecord<KnowledgeLedger>(VAULT_STORE, "knowledge-ledger:" + encodeURIComponent(datasetId));
 }
