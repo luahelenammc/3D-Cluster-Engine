@@ -16,7 +16,7 @@ export function exportGraphML(dataset: GraphDataset): string {
     '<graph id="' + xml(dataset.meta.id) + '" edgedefault="directed">',
   ];
   for (const node of dataset.nodes) result.push('<node id="' + xml(node.id) + '"><data key="label">' + xml(node.label) + '</data><data key="cluster">' + xml(node.cluster) + '</data></node>');
-  for (const link of dataset.links) result.push('<edge id="' + xml(link.id) + '" source="' + xml(link.source) + '" target="' + xml(link.target) + '" directed="' + (link.directed === false ? "false" : "true") + '"><data key="relation">' + xml(typeof link.metadata?.relation === "string" ? link.metadata.relation : link.type || "related") + '</data></edge>');
+  for (const link of dataset.links) result.push('<edge id="' + xml(link.id) + '" source="' + xml(link.source) + '" target="' + xml(link.target) + '" directed="' + (link.directed === true ? "true" : "false") + '"><data key="relation">' + xml(typeof link.metadata?.relation === "string" ? link.metadata.relation : link.type || "related") + '</data></edge>');
   return result.join("\n") + "\n</graph>\n</graphml>\n";
 }
 
@@ -34,7 +34,7 @@ export function buildObsidianVaultExport(dataset: GraphDataset, ledger?: Knowled
   const files: Record<string, string> = {};
   dataset.nodes.forEach((node, index) => {
     const refs = (ledger?.assertions || []).filter((item) => item.subjectId === node.id || item.objectId === node.id);
-    const outgoing = dataset.links.filter((link) => link.source === node.id || link.directed === false && link.target === node.id);
+    const outgoing = dataset.links.filter((link) => link.source === node.id || link.directed !== true && link.target === node.id);
     const links = outgoing.map((link) => {
       const opposite = link.source === node.id ? link.target : link.source;
       const label = typeof link.metadata?.relation === "string" ? link.metadata.relation : link.type || "related";
