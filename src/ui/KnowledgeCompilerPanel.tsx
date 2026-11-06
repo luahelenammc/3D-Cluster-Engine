@@ -8,6 +8,7 @@ import { buildSessionContext, lintManagedWiki } from "../knowledge-engine/resume
 import { createLocalOllamaEmbeddingProvider, searchManagedWiki, type EmbeddingIndex, type HybridHit } from "../knowledge-engine/hybrid";
 import { exportManagedWikiZip, exportManagedWikiVault, previewCanvas, previewManagedNoteRoundTrip, type CanvasPreview, type ManagedNotePreview } from "../knowledge-engine/wiki-interop";
 import { makeReadOnlySnapshot } from "../knowledge-engine/portable";
+import { recordTemporalObservation, summarizeTemporalObservations, type TemporalObservation } from "../knowledge-engine/chronology";
 
 type Mode = "explore" | "ask" | "review";
 interface Props {
@@ -41,6 +42,11 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
   const [working, setWorking] = useState(false);
   const [canvasPreview, setCanvasPreview] = useState<CanvasPreview | null>(null);
   const [noteImport, setNoteImport] = useState<ManagedNotePreview | null>(null);
+  const [temporalId, setTemporalId] = useState("");
+  const [validFrom, setValidFrom] = useState("");
+  const [validUntil, setValidUntil] = useState("");
+  const [temporalInterpretation, setTemporalInterpretation] = useState<TemporalObservation["interpretation"]>("uncertain");
+  const [temporalNote, setTemporalNote] = useState("");
   const vaultId = manifest?.vaultId || null;
 
   useEffect(() => {
@@ -160,6 +166,20 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
     } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Falha na revisão importada." }); }
     finally { setWorking(false); }
   }
+  async function saveTemporal() {
+    if (!wiki || !manifest) return;
+    setWorking(true);
+    try {
+      const next = recordTemporalObservation(wiki, ledger.assertions, {
+        assertionId: temporalId, ...(validFrom ? { validFrom } : {}), ...(validUntil ? { validUntil } : {}),
+        interpretation: temporalInterpretation, note: temporalNote,
+      });
+      await save(next);
+      setTemporalNote(""); setValidFrom(""); setValidUntil("");
+      onToast({ type: "ok", message: "Marco temporal revisado registrado; nenhuma fonte original foi modificada." });
+    } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Falha ao registrar temporalidade." }); }
+    finally { setWorking(false); }
+  }
   const sourceCount = manifest?.sources.length || 0;
   const selectPage = (page: ManagedWikiPage) => { setFocused(page.pageId); setNoteDraft(page.authorNote || ""); onHighlight(page.nodeId); };
 
@@ -205,7 +225,21 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
       </div>
       {plan && <p className="sm-local-note">{plan.unchanged.length} páginas intactas · {plan.retired.length} páginas de nós ausentes preservadas até revisão humana.</p>}
       {wiki && <details><summary>Log e histórico de revisões</summary>{wiki.log.slice(-15).reverse().map((event) => <p key={event.eventId}>{event.at} · {event.action} · {event.pageIds.length} páginas</p>)}</details>}
-      {issues.length > 0 && <details><summary>Lint: {issues.length} alertas de proveniência</summary>{issues.slice(0, 50).map((issue, i) => <p key={issue.pageId + ":" + i}>{issue.severity}: {issue.pageId} · {issue.message}</p>)}</details>}
+      <details><summary>Tempo e validade · anotações humanas</summary>
+        <p>“Registrado em” é o momento desta revisão; “válido desde/até” descreve o fato e nunca é inferido automaticamente da fonte.</p>
+        <label className="sm-field">Relação canônica
+          <select value={temporalId} onChange={(event) => setTemporalId(event.target.value)}><option value="">Escolher afirmação</option>{ledger.assertions.filter((item) => item.reviewStatus === "accepted").slice(0, 500).map((item) => <option key={item.assertionId} value={item.assertionId}>{item.subjectId} · {item.predicate} · {item.objectId}</option>)}</select>
+        </label>
+        <label className="sm-field">Válida desde (opcional)<input type="date" value={validFrom} onChange={(event) => setValidFrom(event.target.value)} /></label>
+        <label className="sm-field">Válida até (opcional)<input type="date" value={validUntil} onChange={(event) => setValidUntil(event.target.value)} /></label>
+        <label className="sm-field">Interpretação humana
+          <select value={temporalInterpretation} onChange={(event) => setTemporalInterpretation(event.target.value as TemporalObservation["interpretation"])}><option value="uncertain">Incerta</option><option value="confirmed">Confirmada pelo revisor</option><option value="contested">Contestada</option><option value="superseded">Superada</option></select>
+        </label>
+        <label className="sm-field">Justificativa da revisão<textarea rows={3} maxLength={500} value={temporalNote} onChange={(event) => setTemporalNote(event.target.value)} placeholder="Por qual razão este período foi anotado?" /></label>
+        <button disabled={working || !temporalId || !temporalNote.trim()} onClick={() => void saveTemporal()}>Registrar marco temporal</button>
+        <small>Registro local por ação. Não retira nem substitui o estado epistemológico canônico automaticamente.</small>
+      </details>
+      {issues.length > 0 && <details><summary>Lint: {issues.length} alertas de proveniência</summary>{issues.slice(0, 50).map((issue, i) => <p key={issue.pageId + ":" + i}>{issue.severity}: {issue.pageId} · {issue.message}</p>)}</details>
     </div>}
     {wiki && mode === "explore" && <div className="knowledge-mode-panel">
       <h4>Wiki derivada</h4>
@@ -224,6 +258,7 @@ export default function KnowledgeCompilerPanel({ dataset, manifest, ledger, sele
         </label>
         <button type="button" onClick={() => void annotate()} disabled={working}>Salvar nota humana</button>
       </article>}
+      {(wiki.temporal || []).length > 0 && <details><summary>Linha do tempo revisada · {wiki.temporal?.length || 0} registros</summary>{summarizeTemporalObservations(wiki).slice(0, 30).map((entry) => <p key={entry.observationId}><b>{entry.interpretation}</b> · {entry.assertionId} · observado {entry.observedAt.slice(0, 10)} · validade {entry.validFrom || "?"} a {entry.validUntil || "?"} · {entry.note}{!entry.evidenceAvailable ? " · sem prova fonte" : ""}</p>)}</details>}
       <div className="sm-actions">
         <button type="button" onClick={() => download("lms3d-managed-wiki.zip", exportManagedWikiZip(wiki))}>Exportar Obsidian + Canvas</button>
         <button className="quiet" onClick={() => download("lms3d-wiki-snapshot.json", jsonBlob(wiki))}>Backup integral local</button>
