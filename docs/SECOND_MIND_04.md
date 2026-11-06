@@ -1,10 +1,10 @@
 # Second Mind 0.4 — Knowledge Compiler, revisão e continuidade
 
 **Author:** Lua Helena Moon Martins Cardoso  
-**Status:** Branch de implementação `feature/second-mind-knowledge-compiler-04`; integração na `main` e deploy dependem de QA do commit final.  
+**Status:** integrado à `main` via [PR #12](https://github.com/luahelenammc/3D-Cluster-Engine/pull/12), merge `ec2da1d9ef2e1338161ddfe13fb321449439774d`. CI final da branch aprovada (Validate `42266929216`; browser desktop/mobile `42266928767`) e QA browser pós-merge `42267166375` aprovada. A disponibilidade pública deve ser confirmada pelo workflow [Deploy GitHub Pages](https://github.com/luahelenammc/3D-Cluster-Engine/actions/workflows/deploy.yml), não presumida pela existência do commit.  
 **Scope:** expansão local-first do Knowledge Engine 0.3 sem alterar `GraphDataset 1.1`, `GraphStore`, sem migrar o corpus privado para o GitHub.
 
-## Arquitetura entregue na branch
+## Arquitetura integrada
 
 ```text
 SourceManifest (fontes humanas e hashes soberanos)
