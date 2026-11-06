@@ -149,7 +149,7 @@ export default function KnowledgeWorkbench({ dataset, manifest, proposal, select
     <div className="sm-section-heading"><div><h3>Auditoria de relações</h3><p>Aceitação canônica continua exclusivamente no fluxo de propostas revisadas.</p></div></div>
     <div className="sm-metrics"><span><b>{combinedLedger.assertions.length}</b> afirmações</span><span><b>{audit.verified}</b> com evidência atual</span><span><b>{audit.stale}</b> stale</span><span><b>{audit.unsupported}</b> sem suporte</span></div>
     <p className="sm-local-note">Cobertura verificável: {(audit.evidenceCoverage * 100).toFixed(1)}%. Relações já existentes sem fontes não foram retroativamente declaradas verdadeiras.</p>
-    <div className="sm-actions"><button onClick={() => download("knowledge-ledger.json", jsonBlob({ ...combinedLedger, audit }))}>Exportar ledger</button><button className="quiet" onClick={() => download("topology-report.json", jsonBlob(topology))}>Exportar topologia</button></div>
+    <div className="sm-actions"><button onClick={() => download("knowledge-ledger.json", jsonBlob(combinedLedger))}>Exportar ledger</button><button className="quiet" onClick={() => download("topology-report.json", jsonBlob(topology))}>Exportar topologia</button></div>
     <div className="sm-evidence-list">
       {combinedLedger.assertions.filter((item) => item.reviewStatus === "proposed" || item.reviewStatus === "needs_review").slice(0, MAX_PREVIEW).map((item) => <article key={item.assertionId} className="sm-knowledge-assertion">
         <b>{nodeLabels.get(item.subjectId) || item.subjectId} → {item.predicate} → {nodeLabels.get(item.objectId) || item.objectId}</b>
