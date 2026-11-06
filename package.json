@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run && npm run test:companion && npm run build",
     "test:unit": "vitest run",
-    "test:companion": "node --test companion/server.test.mjs",
+    "test:companion": "node --test companion/*.test.mjs",
     "lint": "eslint src tests/unit"
   },
   "dependencies": {
