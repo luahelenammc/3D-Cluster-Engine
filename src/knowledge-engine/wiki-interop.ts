@@ -81,3 +81,33 @@ export function previewCanvas(raw: unknown, filenames: string[]): CanvasPreview 
     referencedFiles: references };
 }
 /** Only read-only preview; no parsing a .canvas implies permission to mutate the source graph. */
+
+/** Safe Obsidian round-trip: accept only the separately managed human note, not the compiled body. */
+export interface ManagedNotePreview {
+  pageId: string; title: string; beforeNote: string; afterNote: string; revision: number; sourceBodyUnchanged: true;
+}
+export function previewManagedNoteRoundTrip(wiki: ManagedWiki, markdown: string): ManagedNotePreview {
+  if (markdown.length > 128 * 1024) throw new Error("Nota Obsidian excede 128 KiB.");
+  const normalized = markdown.replace(/\r\n/g, "\n").trimEnd();
+  const match = /^---\n([\s\S]*?)\n---\n/.exec(normalized);
+  if (!match) throw new Error("Metadados gerenciados ausentes.");
+  const fields = match[1].split("\n");
+  const rawId = fields.find((line) => line.startsWith("id: "))?.slice(4);
+  const rev = Number(fields.find((line) => line.startsWith("wiki_revision: "))?.slice(15));
+  const managed = fields.find((line) => line.trim() === "managed_by: lms3d");
+  if (!rawId || !Number.isSafeInteger(rev) || !managed) throw new Error("Identidade ou versão do arquivo gerenciado inválida.");
+  let nodeId: unknown;
+  try { nodeId = JSON.parse(rawId); } catch { throw new Error("ID do nó malformado."); }
+  if (typeof nodeId !== "string" || nodeId.length > 500) throw new Error("ID do nó inválido.");
+  const page = wiki.pages.find((entry) => entry.nodeId === nodeId);
+  if (!page || page.revision !== rev) throw new Error("Revisão ou nó não correspondem à wiki local.");
+  const bundle = exportManagedWikiVault(wiki);
+  const original = bundle.files[bundle.identityMap[page.pageId]].trimEnd();
+  const heading = "\n## Nota humana\n";
+  const originalBody = original.split(heading)[0].trimEnd();
+  const modifiedBody = normalized.split(heading)[0].trimEnd();
+  if (originalBody !== modifiedBody) throw new Error("O corpo gerado foi alterado. Edite apenas a seção Nota humana.");
+  const afterNote = normalized.includes(heading) ? normalized.slice(normalized.indexOf(heading) + heading.length).trim() : "";
+  if (afterNote.length > 4000) throw new Error("Nota humana excede 4.000 caracteres.");
+  return { pageId: page.pageId, title: page.title, beforeNote: page.authorNote || "", afterNote, revision: rev, sourceBodyUnchanged: true };
+}
