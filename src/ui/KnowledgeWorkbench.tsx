@@ -7,6 +7,7 @@ import { createBridgeSemanticExtractor } from "../knowledge-engine/extraction";
 import { buildObsidianVaultExport, exportGraphML, previewGraphifyImport, type GraphifyImportPreview } from "../knowledge-engine/interoperability";
 import { auditLedger, decideAssertion, ledgerFromGraph, ledgerFromProposal } from "../knowledge-engine/ledger";
 import { findKnowledgePath, groundedPathNarrative, pathEvidenceCoverage } from "../knowledge-engine/paths";
+import { buildKnowledgeQueryPacketV2, type KnowledgeQueryPacketV2 } from "../knowledge-engine/retrieval";
 import { detectAssertionContradictions, suggestEntityMerges } from "../knowledge-engine/reconcile";
 import { analyzeTopology } from "../knowledge-engine/topology";
 import type { ExtractionResult, GraphPath, KnowledgeChunk, KnowledgeLedger } from "../knowledge-engine/types";
@@ -41,6 +42,8 @@ export default function KnowledgeWorkbench({ dataset, manifest, proposal, select
   const [evidenceOnly, setEvidenceOnly] = useState(false);
   const [path, setPath] = useState<GraphPath | null>(null);
   const [preview, setPreview] = useState<GraphifyImportPreview | null>(null);
+  const [investigationQuestion, setInvestigationQuestion] = useState("");
+  const [investigationPacket, setInvestigationPacket] = useState<KnowledgeQueryPacketV2 | null>(null);
   const [previousChunks, setPreviousChunks] = useState<KnowledgeChunk[]>([]);
   const [allowChunkUpload, setAllowChunkUpload] = useState(false);
   const [runningExtract, setRunningExtract] = useState(false);
@@ -49,7 +52,7 @@ export default function KnowledgeWorkbench({ dataset, manifest, proposal, select
 
   useEffect(() => {
     let alive = true;
-    setLastDecision(null); setPath(null); setExtraction(null); setPreview(null);
+    setLastDecision(null); setPath(null); setExtraction(null); setPreview(null); setInvestigationPacket(null);
     void loadKnowledgeLedger(dataset.meta.id).then((value) => { if (alive) setLastDecision(value || null); }).catch(() => undefined);
     try {
       const raw = sessionStorage.getItem("lms3d.knowledge.chunk-index." + encodeURIComponent(dataset.meta.id));
@@ -158,6 +161,11 @@ export default function KnowledgeWorkbench({ dataset, manifest, proposal, select
     {entityCandidates.length > 0 && <details className="sm-disclosure"><summary>{entityCandidates.length} sugestões de alias para revisão</summary>{entityCandidates.map((item) => <p key={item.leftId + item.rightId}>{item.leftId} ↔ {item.rightId}: {item.reason}. Nenhum merge automático.</p>)}</details>}
     {contradictions.length > 0 && <details className="sm-disclosure"><summary>{contradictions.length} conflitos potenciais</summary>{contradictions.map((item) => <p key={item.leftAssertionId + item.rightAssertionId}>{item.leftAssertionId} ↔ {item.rightAssertionId}: {item.reason}</p>)}</details>}
     {topology.bridges.length > 0 && <details className="sm-disclosure"><summary>Relações estruturais de ponte</summary>{topology.bridges.slice(0, 15).map((item) => <p key={item.linkId}>{item.source} → {item.target} · {item.linkId}</p>)}</details>}
+
+    <div className="sm-section-heading"><div><h3>Consulta local híbrida · pacote 2.0</h3><p>Trigramas, correspondência lexical, centralidade e fontes; sem embeddings remotos nem envio automático.</p></div></div>
+    <label className="sm-field">Questão<input value={investigationQuestion} onChange={(event) => setInvestigationQuestion(event.target.value)} placeholder="Como os conceitos se conectam?" /></label>
+    <div className="sm-actions"><button onClick={() => { try { setInvestigationPacket(buildKnowledgeQueryPacketV2(dataset, manifest || undefined, investigationQuestion, combinedLedger.assertions, { selectedNodeId: selectedNodeId || undefined, targetNodeId: to.trim() || undefined })); } catch (error) { onToast({ type: "error", message: error instanceof Error ? error.message : "Consulta inválida." }); } }}>Montar pacote local v2</button>{investigationPacket && <button className="quiet" onClick={() => download("knowledge-evidence-packet-v2.json", jsonBlob(investigationPacket))}>Exportar evidências</button>}</div>
+    {investigationPacket && <div className="sm-evidence-list"><p>{investigationPacket.nodes.length} nós · {investigationPacket.links.length} links · {investigationPacket.sources.length} fontes selecionadas. O recorte não prova completude.</p>{investigationPacket.nodes.slice(0, MAX_PREVIEW).map((node) => <button key={node.nodeId} onClick={() => onHighlight(node.nodeId)}>{node.label} · score {node.score.toFixed(2)}</button>)}<details><summary>Restrições e fontes recuperadas</summary>{investigationPacket.sources.map((source) => <p key={source.sourceId}>{source.path}: {source.excerpt}</p>)}{investigationPacket.constraints.map((constraint) => <p key={constraint}>{constraint}</p>)}</details></div>}
 
     <div className="sm-section-heading"><div><h3>Investigação por caminhos</h3><p>Respeita relações dirigidas e só exibe sequências existentes no snapshot atual.</p></div></div>
     <label className="sm-field">Origem (ID de nó)<input list="knowledge-node-list" value={from} onChange={(event) => setFrom(event.target.value)} placeholder={selectedNodeId || dataset.nodes[0]?.id || "id"} /></label>
