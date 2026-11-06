@@ -110,6 +110,11 @@ describe("Second Mind 0.4 local search, continuation and interop", () => {
     expect(preview.valid).toBe(true);
     expect(preview.edges).toBe(1);
     expect(preview.warnings).toEqual([]);
+    const auroraFile = bundle.identityMap["wiki:a"];
+    const aurora = bundle.files[auroraFile];
+    const borealStem = bundle.identityMap["wiki:b"].slice(6, -3);
+    expect(aurora).toContain("[[" + borealStem + "|Boreal]]");
+    expect(aurora).not.toContain("[[b|Boreal]]");
     expect(Object.keys(bundle.files).some((name) => name.endsWith(".md"))).toBe(true);
     expect(bundle.files["README.md"]).not.toContain("Aurora financia Boreal.");
     expect(() => previewCanvas({ nodes: [{ id: "x", type: "file", file: "../private", x: 0, y: 0, width: 10, height: 10 }], edges: [] }, [])).toThrow(/inseguro/);
