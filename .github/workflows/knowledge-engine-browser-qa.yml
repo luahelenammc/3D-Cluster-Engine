@@ -1,0 +1,43 @@
+name: Knowledge Engine browser QA
+on:
+  push:
+    branches:
+      - feature/knowledge-engine-integration
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Install isolated QA browser dependency
+        run: |
+          mkdir -p .qa-browser
+          npm install --prefix .qa-browser --no-save --no-package-lock playwright@1.56.1
+          ./.qa-browser/node_modules/.bin/playwright install chromium
+      - name: Preview and run visual smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/knowledge-vite.log 2>&1 &
+          for i in $(seq 1 35); do
+            curl -sf http://127.0.0.1:4173/ >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:4173/ >/dev/null
+          node scripts/knowledge-visual-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knowledge-engine-visual-qa
+          path: qa-artifacts/
+          retention-days: 3
+          if-no-files-found: warn

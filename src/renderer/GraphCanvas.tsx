@@ -27,6 +27,8 @@ interface Props {
   inspectedId: string | null;
   labelDensity: LabelDensity;
   viewMode: GraphViewMode;
+  knowledgeMode?: "semantic" | "evidence" | "inferred" | "contested" | "path";
+  knowledgeLinkIds?: string[];
   onSelect(id: string | null): void;
   onInspect(id: string): void;
   onSimulation(state: "running" | "paused" | "settled"): void;
@@ -75,7 +77,7 @@ function clusterForce(nodes: RuntimeNode[], clusters: ClusterDefinition[], stren
   return force;
 }
 
-export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanvas({ graph, clusters, layout: layoutInput, visual: visualInput, selectedId, inspectedId, labelDensity, viewMode, onSelect, onInspect, onSimulation }, ref) {
+export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanvas({ graph, clusters, layout: layoutInput, visual: visualInput, selectedId, inspectedId, labelDensity, viewMode, knowledgeMode = "semantic", knowledgeLinkIds = [], onSelect, onInspect, onSimulation }, ref) {
   const hostRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
@@ -229,7 +231,14 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
     const activeColor = activeNode ? clusterColor(activeNode.cluster, clusterMap.get(activeNode.cluster)?.color) : "#ffffff";
     const labels = visibleLabelIds({ nodes: renderGraph.nodes, links: renderGraph.links, selectedId, inspectedId, hoveredId, draggedId, density: labelDensity, zoom: labelZoom, viewMode });
     const isIncident = (link: any) => Boolean(activeId && (endpointId(link.source) === activeId || endpointId(link.target) === activeId));
+    const knowledgePath = new Set(knowledgeLinkIds);
+    const pathNodes = new Set(renderGraph.links.filter((link) => knowledgePath.has(link.id)).flatMap((link) => [endpointId(link.source), endpointId(link.target)]));
+    const relationEvidence = (link: any): boolean => Boolean(Array.isArray(link?.metadata?.secondMind?.evidence) && link.metadata.secondMind.evidence.length);
+    const relationEpistemic = (link: any): string => String(link?.metadata?.secondMind?.epistemicStatus || "");
+    const knowledgeActive = (link: any): boolean => knowledgeMode === "path" ? knowledgePath.has(String(link.id)) : knowledgeMode === "evidence" ? relationEvidence(link) : knowledgeMode === "inferred" ? relationEpistemic(link) === "inferred" : knowledgeMode === "contested" ? relationEpistemic(link) === "contested" : false;
     instance.nodeColor((node: RuntimeNode) => {
+      if (knowledgeMode === "path" && knowledgePath.size && pathNodes.has(node.id)) return "#79e2ec";
+      if (knowledgeMode === "path" && knowledgePath.size && !pathNodes.has(node.id)) return "#252d37";
       if (activeId && visual.dimUnrelatedOnSelection && node.id !== activeId && !activeNeighbors.has(node.id)) return "#202633";
       return node.color || clusterColor(node.cluster, clusterMap.get(node.cluster)?.color);
     }).nodeVal((node: RuntimeNode) => node.id === activeId ? Math.min(visual.nodeSizeMax + 6, (node.value || 4) + 8) : activeNeighbors.has(node.id) ? Math.min(visual.nodeSizeMax + 2, (node.value || 4) + 3) : Math.max(visual.nodeSizeMin, Math.min(visual.nodeSizeMax, node.value || 4))).nodeLabel((node: RuntimeNode) => `<div class="graph-tooltip"><b>${escapeHtml(node.label)}</b><span>${escapeHtml(clusterMap.get(node.cluster)?.label || node.cluster)}</span>${viewMode === "2d" ? `<span>Z · ${escapeHtml(axes.z.label)}: ${Number(node.semanticZ || 0).toFixed(1)}</span>` : ""}</div>`).nodeThreeObject((node: RuntimeNode) => {
@@ -257,14 +266,14 @@ export const GraphCanvas = forwardRef<GraphCanvasApi, Props>(function GraphCanva
         group.add(label);
       }
       return group;
-      }).linkColor((link: any) => isIncident(link) ? activeColor : activeId ? "#303746" : (link.color || "#78839a")).linkWidth((link: any) => isIncident(link) ? Math.max(2.2, Number(link.weight || 1) * 1.4) : Math.max(0.35, Math.min(2, Number(link.weight || 1) * visual.linkWidth))).linkDirectionalParticles((link: any) => visual.showDirectionalParticles && link.directed ? isIncident(link) ? 5 : activeId ? 0 : 1 : 0).linkDirectionalParticleColor(() => activeColor).linkLabel((link: any) => `<div class="graph-tooltip"><b>${escapeHtml(String(link.type || "related"))}</b><span>${escapeHtml(endpointId(link.source))} → ${escapeHtml(endpointId(link.target))}</span></div>`).graphData(renderGraph).d3Force("cluster", clusterForce(renderGraph.nodes, clusters, layout.clusterStrength, viewMode)).d3Force("semanticAxes", createSemanticAxesForce(renderGraph.nodes, renderGraph.links, clusters, axes));
+      }).linkColor((link: any) => knowledgeMode !== "semantic" ? knowledgeActive(link) ? knowledgeMode === "contested" ? "#d79cf8" : knowledgeMode === "inferred" ? "#f7b37a" : knowledgeMode === "evidence" ? "#9edcb9" : "#79e2ec" : "#293442" : isIncident(link) ? activeColor : activeId ? "#303746" : (link.color || "#78839a")).linkWidth((link: any) => knowledgeMode !== "semantic" ? knowledgeActive(link) ? 3.7 : 0.35 : isIncident(link) ? Math.max(2.2, Number(link.weight || 1) * 1.4) : Math.max(0.35, Math.min(2, Number(link.weight || 1) * visual.linkWidth))).linkDirectionalParticles((link: any) => visual.showDirectionalParticles && link.directed ? knowledgeMode !== "semantic" ? knowledgeActive(link) ? 4 : 0 : isIncident(link) ? 5 : activeId ? 0 : 1 : 0).linkDirectionalParticleColor(() => knowledgeMode === "semantic" ? activeColor : "#79e2ec").linkLabel((link: any) => `<div class="graph-tooltip"><b>${escapeHtml(String(link.type || "related"))}</b><span>${escapeHtml(endpointId(link.source))} → ${escapeHtml(endpointId(link.target))}</span></div>`).graphData(renderGraph).d3Force("cluster", clusterForce(renderGraph.nodes, clusters, layout.clusterStrength, viewMode)).d3Force("semanticAxes", createSemanticAxesForce(renderGraph.nodes, renderGraph.links, clusters, axes));
     const charge = instance.d3Force("charge");
     charge?.strength?.(layout.chargeStrength);
     const linkForce = instance.d3Force("link");
     linkForce?.distance?.(layout.linkDistance);
     if (layout.mode === "baked") instance.cooldownTicks(0); else instance.cooldownTicks(layout.cooldownTicks).warmupTicks(layout.warmupTicks).d3ReheatSimulation();
     // Configuration objects are intentionally collapsed to their public inputs.
-  }, [renderGraph, clusters, selectedId, inspectedId, hoveredId, draggedId, labelDensity, labelZoom, layoutInput, visualInput, ready, viewMode]);
+  }, [renderGraph, clusters, selectedId, inspectedId, hoveredId, draggedId, labelDensity, labelZoom, layoutInput, visualInput, ready, viewMode, knowledgeMode, knowledgeLinkIds]);
 
   return <div ref={hostRef} className={`graph-canvas ${viewMode === "2d" ? "is-2d" : "is-3d"}`} role="img" aria-label={viewMode === "2d" ? "Mapa bidimensional em vista superior. A posição Z permanece semântica e pode ser consultada no inspector." : "Visualização tridimensional interativa do grafo. Use a busca e o painel textual para navegação acessível."} />;
 });
