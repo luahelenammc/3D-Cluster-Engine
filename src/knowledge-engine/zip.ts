@@ -44,5 +44,9 @@ export function createLocalZip(files: Record<string, string>): Blob {
   write32(e, 0, 0x06054b50); write16(e, 4, 0); write16(e, 6, 0);
   write16(e, 8, entries.length); write16(e, 10, entries.length);
   write32(e, 12, centralLength); write32(e, 16, offset); write16(e, 20, 0);
-  return new Blob([...binary, ...directory, end], { type: "application/zip" });
+  const buffer = new ArrayBuffer(offset + centralLength + end.length);
+  const output = new Uint8Array(buffer);
+  let cursor = 0;
+  for (const part of [...binary, ...directory, end]) { output.set(part, cursor); cursor += part.length; }
+  return new Blob([buffer], { type: "application/zip" });
 }
