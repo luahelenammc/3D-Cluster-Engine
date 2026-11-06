@@ -2,6 +2,19 @@
 
 Uma engine web genérica para visualizar, explorar e editar grafos 3D organizados por clusters. O renderer recebe um snapshot mutável; o dataset canônico permanece separado, validado, migrável e exportável.
 
+## Knowledge Engine · Second Mind 0.3 (integração de conhecimento)
+
+O motor 3D continua como superfície espacial, mas o **Knowledge Engine** amplia a camada Second Mind com:
+- ledger de afirmações, provas por trechos, fingerprint e revisão humana;
+- extração semântica opcional em chunks via a ponte existente, somente após consentimento;
+- alertas de aliases e contradições, atualização incremental e rastreio de alterações;
+- consulta local lexical + topológica, caminhos dirigidos e citações;
+- comunidades, pontes estruturais e overlays de evidências/inferências;
+- exportação de vault Obsidian + Canvas e GraphML, prévia de Graphify sem importação automática;
+- nível de detalhe (LOD) por clusters, reversível e sem alterar o grafo canônico.
+
+**Importante:** não há inferência semântica automática ao abrir um vault; não se presume qualidade de extração com modelo fraco. Obsidian Canvas é exportação unidirecional neste estágio. O contrato `GraphDataset 1.1` permanece intacto. Consulte [`docs/KNOWLEDGE_ENGINE.md`](docs/KNOWLEDGE_ENGINE.md) para segurança, limitações e provas de QA.
+
 ## GitHub Pages
 
 O projeto é uma SPA Vite inteiramente estática. Todo push para `main` executa lint, testes, build e publicação pelo workflow `.github/workflows/deploy-pages.yml`. Pull requests e branches de trabalho passam por `.github/workflows/validate.yml`.
