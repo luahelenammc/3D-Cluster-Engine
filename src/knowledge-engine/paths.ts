@@ -1,5 +1,5 @@
 import type { GraphDataset } from "../core/types";
-import type { KnowledgeAssertion, KnowledgeEvidence, GraphPath } from "./types";
+import type { KnowledgeAssertion, GraphPath } from "./types";
 import { evaluateAssertion } from "./ledger";
 import type { SourceManifest } from "../second-mind/types";
 
