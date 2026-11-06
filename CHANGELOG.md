@@ -1,3 +1,13 @@
+## Unreleased — Second Mind 0.4 · Knowledge Compiler
+
+- Compilação determinística de wiki cumulativa gerenciada com revisão por página, stale, backlinks, log, rollback e readback local.
+- Consulta BM25 com vetores Ollama locais opcionais, resumo de continuidade e revisão de fontes.
+- Temporalidade explícita (observado em versus válido desde/até) sob registro humano.
+- Export Obsidian Canvas/Markdown com links resolvidos; importação limitada à seção Nota humana, que não altera o corpo compilado.
+- Snapshot portátil e MCP stdio somente leitura por exportação explícita.
+- Modos Explorar, Perguntar, Revisar; QA sintético e Playwright desktop/mobile.
+- Sem edição de fontes por IA, sem corpus privado em CI e sem mudança do contrato GraphDataset 1.1.
+
 # Changelog
 
 ## Unreleased — Knowledge Engine / Second Mind 0.3 (2026-11-06)
