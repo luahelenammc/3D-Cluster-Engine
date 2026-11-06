@@ -15,7 +15,7 @@ export function createBridgeSemanticExtractor(options: BridgeOptions): SemanticE
       if (!options.explicitlyAuthorized) throw new Error("Extração semântica exige autorização explícita do payload.");
       const max = Math.max(1, Math.min(8, options.maxChunksPerRun ?? 8));
       const acceptedChunks = chunks.slice(0, max);
-      const results: ExtractionResult = { complete: chunks.length <= max, truncated: chunks.length > max, assertions: [], errors: [], provider: "second-mind-companion" };
+      const results: ExtractionResult = { complete: chunks.length <= max, truncated: chunks.length > max, assertions: [], errors: [], provider: "second-mind-companion", proposals: [] };
       if (!acceptedChunks.length) return results;
       const graph = boundedContext(context.dataset);
       for (const chunk of acceptedChunks) {
@@ -35,6 +35,7 @@ export function createBridgeSemanticExtractor(options: BridgeOptions): SemanticE
             results.complete = false;
             continue;
           }
+          results.proposals?.push(proposal);
           const assertions = ledgerFromProposal(proposal, context.manifest).slice(0, context.maxAssertions);
           for (const assertion of assertions) assertion.extractedBy.chunkId = chunk.chunkId;
           results.assertions.push(...assertions);
